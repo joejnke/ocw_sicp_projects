@@ -34,7 +34,11 @@
 
 (define position
   (lambda (a v u t)
-    YOUR-CODE-HERE))
+    (+ u
+      (* v t)
+      (* 0.5
+        a
+        (square t)))))
 
 ;; you need to complete this procedure, then show some test cases
 
@@ -46,29 +50,64 @@
 
 
 ;; Problem 2
+;; discriminant of a quadratic function ax^2 + bx + c => (b^2 - 4ac)
+(define (discriminant a b c)
+  (- (square b)   
+      (* 4 a c)))
 
 (define root1
   (lambda (a b c)
-    YOUR-CODE-HERE))
+    (let ((discr (discriminant a b c)))
+          (if (< discr 0) #f     ;; check if there is no real roots and return false if true
+            (/ (+ (- b)
+                  (sqrt discr))
+                (* 2 a))))))
+
+;(root1 1 (- 2) 1) => 1 ;;discriminant=0
+;(root1 1 0 (- 1)) => 1 ;;discriminant>0
+;(root1 2 3 4) => #f ;;discriminant<0
 
 (define root2
   (lambda (a b c)
-    YOUR-CODE-HERE))
+    (let ((discr (discriminant a b c)))
+          (if (< discr 0) #f     ;; check if there is no real roots and return false if true
+            (/ (- (- b)
+                  (sqrt discr))
+                (* 2 a))))))
 
 ;; complete these procedures and show some test cases
+;(root2 1 (- 2) 1) => 1 ;;discriminant=0
+;(root2 1 0 (- 1)) => -1 ;;discriminant>0
+;(root2 2 3 4) => #f ;;discriminant<0
 
 ;; Problem 3
 
 (define time-to-impact
   (lambda (vertical-velocity elevation)
-    YOUR-CODE-HERE))
+    (let ((r1 (root1 (* 0.5 (- gravity)) vertical-velocity elevation))
+          (r2 (root2 (* 0.5 (- gravity)) vertical-velocity elevation)))
+          (if r1                  ; check if there is real root
+              (if (> r1 r2)       ; check and return the larger root
+                  r1
+                  r2)
+              r1))))
+; test 
+; (time-to-impact 10 (- 10)) => #f ;time to get up to ground from height below ground
+                                   ; with some initial velocity that can't make it up to ground
+; (time-to-impact 0 0) => 0 ;time to get to ground from ground with zero initial velocity
+; (time-to-impact 10 0) => 2.0408 ;time to get to ground from ground => -b/a
+; (time-to-impact 0 10) => 1.4285 ;time to get to ground from a given height => square-root of (-c/a)
 
 ;; Note that if we want to know when the ball drops to a particular height r 
 ;; (for receiver), we have
 
 (define time-to-height
   (lambda (vertical-velocity elevation target-elevation)
-    YOUR-CODE-HERE))
+    (time-to-impact vertical-velocity (- elevation target-elevation))))
+; test 
+; (time-to-height 0 0 10) => #f ;time to get to height h from ground with zero initial velocity
+; (time-to-height 10 10 10) => 2.0408 ;time to get to height h from height h => -b/a
+; (time-to-height 0 10 5) => 1.0101 ;time to get to half-way to ground from a given height
 
 ;; Problem 4
 
