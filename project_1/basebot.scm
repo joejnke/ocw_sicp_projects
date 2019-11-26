@@ -275,12 +275,12 @@
                           u0
                           (sqrt (+ (square u0) (square v0)))
                           dt)))
-              (v (* dt
-                    (- (+ g
-                          (* (/ 1 m)
-                             beta
-                             v0
-                             (sqrt (+ (square u0) (square v0)))))))))
+              (v (+ v0 (* dt
+                          (- (+ g
+                                (* (/ 1 m)
+                                   beta
+                                   v0
+                                   (sqrt (+ (square u0) (square v0))))))))))
               (integrate x y u v dt g m beta)))))
 
 (define travel-distance
@@ -293,9 +293,9 @@
 
 
 ;; RUN SOME TEST CASES
-;(travel-distance 1 45 45) => 172.9160 ;need to be less than (travel-distance-simple 1 45 45)
-;(travel-distance 1 40 45) => 160.6410 ;need to be less than (travel-distance-simple 1 40 45)
-;(travel-distance 1 35 45) => 147.4302 ;need to be less than (travel-distance-simple 1 35 45)
+;(travel-distance 1 45 45) => 92.2306 ;need to be less than (travel-distance-simple 1 45 45)
+;(travel-distance 1 40 45) => 81.6678 ;need to be less than (travel-distance-simple 1 40 45)
+;(travel-distance 1 35 45) => 70.3003 ;need to be less than (travel-distance-simple 1 35 45)
 
 ;; what about Denver?
 
