@@ -120,7 +120,10 @@
 
 (define travel-distance-simple
   (lambda (elevation velocity angle)
-    YOUR-CODE-HERE))
+    (* (* velocity
+          (cos (degree2radian angle)))
+       (time-to-impact (* velocity (sin (degree2radian angle)))
+                       elevation))))
 
 ;; let's try this out for some example values.  Note that we are going to 
 ;; do everything in metric units, but for quaint reasons it is easier to think
@@ -144,9 +147,9 @@
 
 ;; what is time to impact for a ball hit at a height of 1 meter
 ;; with a velocity of 45 m/s (which is about 100 miles/hour)
-;; at an angle of 0 (straight horizontal)
-;; at an angle of (/ pi 2) radians or 90 degrees (straight vertical)
-;; at an angle of (/ pi 4) radians or 45 degrees
+;; (travel-distance-simple 1 45 0) => 20.3289m ;at an angle of 0 (straight horizontal)
+;; (travel-distance-simple 1 45 90) => 5.4964-e4m ;at an angle of (/ pi 2) radians or 90 degrees (straight vertical)
+;; (travel-distance-simple 1 45 45) => 207.6278m ;at an angle of (/ pi 4) radians or 45 degrees
 
 ;; what is the distance traveled in each case?
 ;; record both in meters and in feet
@@ -163,9 +166,28 @@
 
 (define alpha-increment 0.01)
 
+; compare the distance for start-angle and the distance for
+; the angle with the max distance of the angle set [start-angle+1 end-angle]
+(define angle-of-max-dist 
+  (lambda (start-angle end-angle velocity elevation) 
+    (if (= start-angle end-angle)
+        start-angle
+        (let ((max-angle (angle-of-max-dist (+ start-angle 1) 
+                                            end-angle 
+                                            velocity 
+                                            elevation)))
+             (if (> (travel-distance-simple elevation velocity start-angle) 
+              (travel-distance-simple elevation velocity max-angle))
+            start-angle
+            max-angle)))))
+
 (define find-best-angle
   (lambda (velocity elevation)
-    YOUR-CODE-HERE))
+    (angle-of-max-dist 0 90 velocity elevation)))
+
+;test 
+;for any velocity and elevation. It must return 45 degrees
+;(find-best-angle 305 1) => 45 ;
 
 ;; find best angle
 ;; try for other velocities
@@ -242,13 +264,38 @@
 
 (define integrate
   (lambda (x0 y0 u0 v0 dt g m beta)
-    YOUR-CODE-HERE))
+    (if (<= y0 0)  ;if the ball hit the ground
+        x0        ;return the value x at which point the ball hit the ground
+
+        ;;compute the new value of x y u and v and then call integrate with this values
+        (let ((x (+ x0 (* u0 dt)))
+              (y (+ y0 (* v0 dt)))
+              (u (+ u0 (* (- (/ 1 m))
+                          beta
+                          u0
+                          (sqrt (+ (square u0) (square v0)))
+                          dt)))
+              (v (* dt
+                    (- (+ g
+                          (* (/ 1 m)
+                             beta
+                             v0
+                             (sqrt (+ (square u0) (square v0)))))))))
+              (integrate x y u v dt g m beta)))))
 
 (define travel-distance
-  YOUR-CODE-HERE)
+  (lambda (elevation velocity-mag angle)
+    (let ((x0 0)
+          (y0 elevation)
+          (u0 (* velocity-mag (cos (degree2radian angle))))
+          (v0 (* velocity-mag (sin (degree2radian angle)))))
+         (integrate x0 y0 u0 v0 alpha-increment gravity mass beta))))
 
 
 ;; RUN SOME TEST CASES
+;(travel-distance 1 45 45) => 172.9160 ;need to be less than (travel-distance-simple 1 45 45)
+;(travel-distance 1 40 45) => 160.6410 ;need to be less than (travel-distance-simple 1 40 45)
+;(travel-distance 1 35 45) => 147.4302 ;need to be less than (travel-distance-simple 1 35 45)
 
 ;; what about Denver?
 
