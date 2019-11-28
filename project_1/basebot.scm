@@ -300,6 +300,101 @@
 ;; what about Denver?
 
 ;; Problem 7
+; make set of valid angles to reach target in any range. e.g: the range [-90 90] degrees => (cons (- 90) 90)
+(define collect-reach-angles
+  (lambda (velocity-mag elevation distance angle-range)
+    (define reacheable?
+      (lambda (angle)
+        (if (and (time-to-impact (* velocity-mag (sin (degree2radian angle))) 
+                            elevation) ;if hits ground
+                 (< (abs (- distance (travel-distance elevation
+                                                      velocity-mag
+                                                      angle)))
+                    0.01)) ;if travel distance is close to target diatance
+            #t
+            #f)))
+
+    (define first-reacheable-angle 
+      (lambda (angle-range)
+        (if (>= (car angle-range) (cdr angle-range)) ;if there is only one angle inthe angle-range
+            (if (reacheable? (car angle-range))
+                (car angle-range)
+                `())
+            (if (reacheable? (car angle-range))  ;check if first angle in the range is valid
+                (car angle-range)
+                (first-reacheable-angle (cons (+ 1 (car angle-range))
+                                              (cdr angle-range)))))))
+
+    (let ((fra (first-reacheable-angle angle-range)))
+         (if (null? fra)
+              fra
+              (cons fra (first-reacheable-angle (cons (+ 1 fra) (cdr angle-range))))))))
+
+;return time taken to reach target
+(define integrate-time
+  (lambda (x0 y0 u0 v0 dt distance time g m beta)
+    (if (< (abs (- x0 distance)) 0.01)  ;if the ball hit the ground
+        time        ;return the value x at which point the ball hit the ground
+
+        ;;compute the new value of x y u and v and then call integrate with this values
+        (let ((temp_time (+ time dt))
+              (x (+ x0 (* u0 dt)))
+              (y (+ y0 (* v0 dt)))
+              (u (+ u0 (* (- (/ 1 m))
+                          beta
+                          u0
+                          (sqrt (+ (square u0) (square v0)))
+                          dt)))
+              (v (+ v0 (* dt
+                          (- (+ g
+                                (* (/ 1 m)
+                                   beta
+                                   v0
+                                   (sqrt (+ (square u0) (square v0))))))))))
+              (integrate-time x y u v dt distance temp_time g m beta)))))
+
+(define travel-time
+  (lambda (elevation velocity-mag distance angle)
+    (let ((x0 0)
+          (y0 elevation)
+          (u0 (* velocity-mag (cos (degree2radian angle))))
+          (v0 (* velocity-mag (sin (degree2radian angle)))))
+         (integrate-time x0 y0 u0 v0 alpha-increment distance 0 gravity mass beta))))
+
+; return the angle to achive the minimum travel time from set of valid angles
+(define optimal-angle
+  (lambda (elevation velocity-mag distance angles-set)
+;    (let ((next-angle (optimal-angle (cdr angles-set)))))   
+;    (if (< (travel-time (car angles-set)) 
+;           (if (null? (cdr angles-set))
+;                infinity
+;                (travel-time (optimal-angle (cdr angles-set)))))
+;
+;           (car angles-set)
+;           (optimal-angle (cdr angles-set)))))
+  (if (null? angles-set)
+      angles-set
+      (let ((next-angle (optimal-angle elevation velocity-mag distance (cdr angles-set))))
+        (if (or (null? next-angle) (< (travel-time elevation velocity-mag distance (car angles-set))
+               (travel-time elevation velocity-mag distance next-angle)))
+            (car angles-set)
+            next-angle)))))
+
+(define angle-to-throw
+  (lambda (velocity-mag elevation distance mass beta gravity)
+;;    (if (reacheable? velocity-mag distance elevation angle) ;check if the distance is reacheable
+;;        (optimal-angle (collect-reach-angles velocity-mag 
+;;                                             elevation
+;;                                             distance angle)) ;collect every possible angle to reach to
+;;                                                        ;the target and choose the optimal one
+;;        0))) ;return 0 if not reacheable
+    (let ((angles-set (collect-reach-angles velocity-mag 
+                                             elevation
+                                             distance
+                                             (cons (- 90) 90))))
+         (if (null? angles-set)
+              `()
+             (optimal-angle elevation velocity-mag distance angles-set)))))
  
 ;; now let's turn this around.  Suppose we want to throw the ball.  The same
 ;; equations basically hold, except now we would like to know what angle to 
@@ -314,6 +409,9 @@
 ;; try out some times for distances (30, 60, 90 m) or (100, 200, 300 ft) 
 ;; using 45m/s
 
+;test 
+;(angle-to-throw 45 1 92.2306 mass beta gravity)
+;(angle-to-throw 45 1 0 mass beta gravity) => -90
 ;; Problem 8
 
 ;; Problem 9
