@@ -300,7 +300,12 @@
 ;; what about Denver?
 
 ;; Problem 7
-; make set of valid angles to reach target in any range. e.g: the range [-90 90] degrees => (cons (- 90) 90)
+;; now let's turn this around.  Suppose we want to throw the ball.  The same
+;; equations basically hold, except now we would like to know what angle to 
+;; use, given a velocity, in order to reach a given height (receiver) at a 
+;; given distance
+
+; construct set of valid angles to reach target with in any angle range. e.g: the range [-90 90] degrees => (cons (- 90) 90)
 (define collect-reach-angles
   (lambda (velocity-mag elevation distance angle-range)
     (define reacheable?
@@ -330,13 +335,13 @@
               fra
               (cons fra (first-reacheable-angle (cons (+ 1 fra) (cdr angle-range))))))))
 
-;return time taken to reach target
+;return time taken to reach a target
 (define integrate-time
   (lambda (x0 y0 u0 v0 dt distance time g m beta)
     (if (and (<= y0 0) (< (abs (- x0 distance)) 0.01))  ;if the ball hit the ground
-        time        ;return the value x at which point the ball hit the ground
+        time        ;return the value of time at when the ball hits the ground
 
-        ;;compute the new value of x y u and v and then call integrate with this values
+        ;;compute the new value of x y u v and time and then call integrate with this values
         (let ((temp_time (+ time dt))
               (x (+ x0 (* u0 dt)))
               (y (+ y0 (* v0 dt)))
@@ -374,14 +379,9 @@
               (car angles-set)
               next-angle)))))
 
+;calculate the best angle to throw a ball
 (define angle-to-throw
   (lambda (velocity-mag elevation distance mass beta gravity)
-;;    (if (reacheable? velocity-mag distance elevation angle) ;check if the distance is reacheable
-;;        (optimal-angle (collect-reach-angles velocity-mag 
-;;                                             elevation
-;;                                             distance angle)) ;collect every possible angle to reach to
-;;                                                        ;the target and choose the optimal one
-;;        0))) ;return 0 if not reacheable
     (let ((angles-set (collect-reach-angles velocity-mag 
                                              elevation
                                              distance
@@ -389,12 +389,6 @@
          (if (null? angles-set)
               `()
              (optimal-angle elevation velocity-mag distance angles-set)))))
- 
-;; now let's turn this around.  Suppose we want to throw the ball.  The same
-;; equations basically hold, except now we would like to know what angle to 
-;; use, given a velocity, in order to reach a given height (receiver) at a 
-;; given distance
-
 
 ;; a cather trying to throw someone out at second has to get it roughly 36 m
 ;; (or 120 ft) how quickly does the ball get there, if he throws at 55m/s,
@@ -404,8 +398,8 @@
 ;; using 45m/s
 
 ;test 
-;(angle-to-throw 45 1 92.2306 mass beta gravity)
 ;(angle-to-throw 45 1 0 mass beta gravity) => -90 ;throwing down to ground to 0 lateral distance from a given height
+
 ;; Problem 8
 
 ;; Problem 9
