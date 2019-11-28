@@ -333,7 +333,7 @@
 ;return time taken to reach target
 (define integrate-time
   (lambda (x0 y0 u0 v0 dt distance time g m beta)
-    (if (< (abs (- x0 distance)) 0.01)  ;if the ball hit the ground
+    (if (and (<= y0 0) (< (abs (- x0 distance)) 0.01))  ;if the ball hit the ground
         time        ;return the value x at which point the ball hit the ground
 
         ;;compute the new value of x y u and v and then call integrate with this values
@@ -364,21 +364,15 @@
 ; return the angle to achive the minimum travel time from set of valid angles
 (define optimal-angle
   (lambda (elevation velocity-mag distance angles-set)
-;    (let ((next-angle (optimal-angle (cdr angles-set)))))   
-;    (if (< (travel-time (car angles-set)) 
-;           (if (null? (cdr angles-set))
-;                infinity
-;                (travel-time (optimal-angle (cdr angles-set)))))
-;
-;           (car angles-set)
-;           (optimal-angle (cdr angles-set)))))
-  (if (null? angles-set)
-      angles-set
-      (let ((next-angle (optimal-angle elevation velocity-mag distance (cdr angles-set))))
-        (if (or (null? next-angle) (< (travel-time elevation velocity-mag distance (car angles-set))
-               (travel-time elevation velocity-mag distance next-angle)))
-            (car angles-set)
-            next-angle)))))
+    (if (or (not (pair? angles-set)) (null? angles-set))
+        angles-set
+        (let ((next-angle (optimal-angle elevation velocity-mag distance (cdr angles-set))))
+                                                                             
+          (if (or (null? next-angle) 
+                  (< (travel-time elevation velocity-mag distance (car angles-set))
+                     (travel-time elevation velocity-mag distance next-angle)))
+              (car angles-set)
+              next-angle)))))
 
 (define angle-to-throw
   (lambda (velocity-mag elevation distance mass beta gravity)
@@ -411,7 +405,7 @@
 
 ;test 
 ;(angle-to-throw 45 1 92.2306 mass beta gravity)
-;(angle-to-throw 45 1 0 mass beta gravity) => -90
+;(angle-to-throw 45 1 0 mass beta gravity) => -90 ;throwing down to ground to 0 lateral distance from a given height
 ;; Problem 8
 
 ;; Problem 9
