@@ -178,14 +178,14 @@
 ;; test
 ;(EYE-FOR-TWO-EYES '() (list "d" "d")) => "c"   ;my-history is empty
 ;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "c")) => "c" ;other-history has one "c" in recent two plays
-;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "d")) => "d" ;other-history has no "c" in recent two plays
+;(EYE-FOR-n-EYES (list "c" "c") (list "d" "d") 2) => "d" ;other-history has no "c" in recent two plays
 
 ;; EYE-FOR-EYE but now looking recent n moves of the other player where n>=1
 (define EYE-FOR-N-EYES 
   (lambda (my-history other-history n)
     (cond ((<= n 1) (EYE-FOR-EYE my-history other-history))
           ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
-               (string=? (EYE-FOR-N-EYE my-history (rest-of-plays other-history) (- n 1)) "c")) "c")
+               (string=? (EYE-FOR-N-EYES my-history (rest-of-plays other-history) (- n 1)) "c")) "c")
           (else "d"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
