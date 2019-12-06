@@ -67,6 +67,7 @@
   (cadr (extract-entry game *game-association-list*)))
 
 ;; note that you will need to write extract-entry
+;; find the score for a play from the game matrix
 (define extract-entry 
   (lambda (game *game-association-list*)
     (cond 
@@ -80,6 +81,52 @@
 ;(extract-entry (make-play "d" "c") *game-association-list*) => (("d" "c") (5 0)) ;valid play
 ;(extract-entry (make-play "d" "d") *game-association-list*) => (("d" "d") (1 1)) ;valid play
 ;(extract-entry (make-play "r" "d") *game-association-list*) => invalid play      ;invalid play
+
+;; make matrix of scores of games between every possible pair of strategies in a given strategy list
+(define strats-performance-comparison 
+  (lambda (strats-list)
+    (if (null? (cdr strats-list))
+        (strat-performance (car strats-list) strats-list)
+        (cons (strat-performance (car strats-list) strats-list)
+              (strats-performance-comparison (cdr strats-list))))))
+;; test
+;(define strats-list (list NASTY PATSY SPASTIC EGALITARIAN EYE-FOR-EYE))
+;(strats-performance-comparison strats-list)
+
+;; make matrix of scores of every game between a strategy and 
+;; strategies in a given strategy list
+(define strat-performance 
+  (lambda (strat strats-list)
+    ;redefine playloop localy to return game results instead of printing them
+    (define (play-loop strat0 strat1)
+      (define (play-loop-iter strat0 strat1 count history0 history1 limit)
+        (cond ((= count limit) (get-results history0 history1 limit))
+	            (else (let ((result0 (strat0 history0 history1))
+                          (result1 (strat1 history1 history0)))
+                         (play-loop-iter strat0 strat1 (+ count 1)
+                                        (extend-history result0 history0)
+                                        (extend-history result1 history1)
+                                        limit)))))
+      (play-loop-iter strat0 strat1 0 the-empty-history the-empty-history
+          (+ 90 (random 21))))
+
+    ;redefinition of print-out-results to return the results instead of printing them
+    (define (get-results history0 history1 number-of-games)
+      (let ((scores (get-scores history0 history1)))
+           (cons (* 1.0 (/ (car scores) number-of-games)) 
+                 (* 1.0 (/ (cadr scores) number-of-games)))))     
+
+    (if (null? (cdr strats-list))
+        (cons (cons strat (car strats-list))
+              (play-loop strat (car strats-list)))
+        (cons (cons (cons strat (car strats-list))
+                    (play-loop strat (car strats-list)))
+              (strat-performance strat (cdr strats-list))))))
+
+;; test
+;(define strats-list (list nasty PATSY SPASTIC EGALITARIAN EYE-FOR-EYE))
+;(strat-performance (car strats-list) strats-list)
+
 
 (define make-play list)
 
