@@ -171,17 +171,15 @@
 ;; EYE-FOR-EYE but now looking recent two moves of the other player
 (define EYE-FOR-TWO-EYES 
   (lambda (my-history other-history)
-    (cond ((or (empty-history? my-history) 
-               (empty-history? other-history)
-               (null? (cdr other-history))) "c")
-          ((or (string=? (most-recent-play other-history) "c")
-               (string=? (car (rest-of-plays other-history)) "c")) "c")
+    (cond ((empty-history? my-history) "c")
+          ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
+               (string=? (EYE-FOR-EYE my-history (rest-of-plays other-history)) "c")) "c")
           (else "d"))))
 
 ;; test
-;(EYE-FOR-TWO-EYES '() (cons "d" "d")) => "c"   ;my-history is empty
-;(EYE-FOR-TWO-EYES (cons "c" "c") (cons "d" "c")) => "c" ;other-history has one "c" in recent two plays
-;(EYE-FOR-TWO-EYES (cons "c" "c") (cons "d" "d")) => "d" ;other-history has no "c" in recent two plays
+;(EYE-FOR-TWO-EYES '() (list "d" "d")) => "c"   ;my-history is empty
+;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "c")) => "c" ;other-history has one "c" in recent two plays
+;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "d")) => "d" ;other-history has no "c" in recent two plays
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
