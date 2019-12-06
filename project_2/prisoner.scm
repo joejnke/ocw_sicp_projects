@@ -67,6 +67,19 @@
   (cadr (extract-entry game *game-association-list*)))
 
 ;; note that you will need to write extract-entry
+(define extract-entry 
+  (lambda (game *game-association-list*)
+    (cond 
+        ((null? *game-association-list*) "invalid play")
+        ((equal? game (caar *game-association-list*)) (car *game-association-list*))
+        (else (extract-entry game (cdr *game-association-list*))))))
+
+;; test
+;(extract-entry (make-play "c" "c") *game-association-list*) => (("c" "c") (3 3)) ;valid play
+;(extract-entry (make-play "c" "d") *game-association-list*) => (("c" "d") (0 5)) ;valid play
+;(extract-entry (make-play "d" "c") *game-association-list*) => (("d" "c") (5 0)) ;valid play
+;(extract-entry (make-play "d" "d") *game-association-list*) => (("d" "d") (1 1)) ;valid play
+;(extract-entry (make-play "r" "d") *game-association-list*) => invalid play      ;invalid play
 
 (define make-play list)
 
