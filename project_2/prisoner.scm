@@ -157,6 +157,7 @@
 	  ((string=? (most-recent-play hist) test)
 	   (+ (count-instances-of test (rest-of-plays hist)) 1))
 	  (else (count-instances-of test (rest-of-plays hist)))))
+
   (let ((ds (count-instances-of "d" other-history))
 	(cs (count-instances-of "c" other-history)))
     (if (> ds cs) "d" "c")))
@@ -165,6 +166,23 @@
   (if (empty-history? my-history)
       "c"
       (most-recent-play other-history)))
+
+
+;; EYE-FOR-EYE but now looking recent two moves of the other player
+(define EYE-FOR-TWO-EYES 
+  (lambda (my-history other-history)
+    (cond ((or (empty-history? my-history) 
+               (empty-history? other-history)
+               (null? (cdr other-history))) "c")
+          ((or (string=? (most-recent-play other-history) "c")
+               (string=? (car (rest-of-plays other-history)) "c")) "c")
+          (else "d"))))
+
+;; test
+;(EYE-FOR-TWO-EYES '() (cons "d" "d")) => "c"   ;my-history is empty
+;(EYE-FOR-TWO-EYES (cons "c" "c") (cons "d" "c")) => "c" ;other-history has one "c" in recent two plays
+;(EYE-FOR-TWO-EYES (cons "c" "c") (cons "d" "d")) => "d" ;other-history has no "c" in recent two plays
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
