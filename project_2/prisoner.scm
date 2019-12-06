@@ -171,8 +171,7 @@
 ;; EYE-FOR-EYE but now looking recent two moves of the other player
 (define EYE-FOR-TWO-EYES 
   (lambda (my-history other-history)
-    (cond ((empty-history? my-history) "c")
-          ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
+    (cond ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
                (string=? (EYE-FOR-EYE my-history (rest-of-plays other-history)) "c")) "c")
           (else "d"))))
 
