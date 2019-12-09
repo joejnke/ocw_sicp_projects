@@ -223,14 +223,35 @@
 ;@ freq1 = 0
 ;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 0) => "d"
 
-;@ my-history=freq0
+;@ (length my-history)=freq0
 ;(make-rotating-strategy (list "d" "c" "d") (list "c" "d" "d") nasty patsy 3 2) => "c"
 
-;@ my-history>freq0 and my-history <= (freq0 + freq1)
+;@ (length my-history) >freq0 and (length my-history) <= (freq0 + freq1)
 ;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 2) => "c" 
 
-;@ my-history = (freq0 + freq1)
+;@ (length my-history) = (freq0 + freq1)
 ;(make-rotating-strategy (list "d" "c" "d" "d" "c") (list "c" "d" "d") nasty patsy 3 2) => "c" 
+
+;;returns a new strategy that loops through a list of strategies passed as input, using the next
+;;one in the list for each play, and then starting again at the beginning of the list when it has
+;;used all the strategies
+(define make-higher-order-spastic
+  (lambda (my-history other-history strats-list)
+    (let ((index (remainder (length my-history) (length strats-list))))
+         (list-ref strats-list index))))
+
+;; test
+;@ (length my-history) = 0
+;(make-higher-order-spastic '() (list "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= NASTY
+
+;@ (length my-history) = (length strats-list)
+;(make-higher-order-spastic (list "c" "c" "d" "c") (list "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= NASTY
+
+;@ (length my-history) > (length strats-list)
+;(make-higher-order-spastic (list "c" "c" "d" "d" "c" "d") (list "c" "d" "d" "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= SPASTIC
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
