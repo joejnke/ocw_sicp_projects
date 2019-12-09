@@ -159,7 +159,7 @@
 	  (else (count-instances-of test (rest-of-plays hist)))))
 
   (let ((ds (count-instances-of "d" other-history))
-	(cs (count-instances-of "c" other-history)))
+	      (cs (count-instances-of "c" other-history)))
     (if (> ds cs) "d" "c")))
 
 (define (EYE-FOR-EYE my-history other-history)
@@ -198,6 +198,39 @@
 ;(EYE-FOR-N-EYES '() (list "d" "d" "d" "d") 4) => "c"              ;my-history is empty
 ;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c" "d" "d") 4) >= "c"   ;other-history has one "c" in recent <=N plays
 ;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c") 4) >= "c"           ;test for history < N
+
+;; plays strat0 for the first freq0 rounds in the
+;; iterated game, then switches to strat1 for the next freq1 rounds, and so on.
+;; round = (length my-history)
+(define make-rotating-strategy
+  (lambda (my-history other-history strat0 strat1 freq0 freq1)
+    (cond ((= freq0 0) (strat1 my-history other-history))
+          ((= freq1 0) (strat0 my-history other-history))
+          ((= 0 (length my-history)) (strat0 my-history other-history))
+          (else (let ((rem (remainder (length my-history)
+                                      (+ freq0 freq1))))
+                      (if (and (> rem 0)
+                                (< rem freq0))
+                          (strat0 my-history other-history)
+                          (strat1 my-history other-history)))))))
+
+;; test
+;(make-rotating-strategy '() (list "c" "d") nasty patsy 3 2) => "d" ;0 initial history
+
+;@ freq0 = 0
+;(make-rotating-strategy '() (list "c" "d" "d") nasty patsy 0 2) => "c"
+
+;@ freq1 = 0
+;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 0) => "d"
+
+;@ my-history=freq0
+;(make-rotating-strategy (list "d" "c" "d") (list "c" "d" "d") nasty patsy 3 2) => "c"
+
+;@ my-history>freq0 and my-history <= (freq0 + freq1)
+;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 2) => "c" 
+
+;@ my-history = (freq0 + freq1)
+;(make-rotating-strategy (list "d" "c" "d" "d" "c") (list "c" "d" "d") nasty patsy 3 2) => "c" 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
