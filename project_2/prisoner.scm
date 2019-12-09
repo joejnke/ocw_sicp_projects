@@ -184,9 +184,20 @@
 (define EYE-FOR-N-EYES 
   (lambda (my-history other-history n)
     (cond ((<= n 1) (EYE-FOR-EYE my-history other-history))
+          ;if other-history has number of items less than n, call the apropriate EYE-FOR-N-EYES procedure.
+          ((< (length other-history) n) (EYE-FOR-N-EYES my-history other-history (length other-history)))
+
           ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
                (string=? (EYE-FOR-N-EYES my-history (rest-of-plays other-history) (- n 1)) "c")) "c")
           (else "d"))))
+
+;; test
+;(EYE-FOR-N-EYES '() (list "d" "d") 2) => "c"   ;my-history is empty
+;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c") 2) => "c" ;other-history has one "c" in recent two plays
+;(EYE-FOR-N-EYES (list "c" "c") (list "d" "d") 2) => "d" ;other-history has no "c" in recent two plays
+;(EYE-FOR-N-EYES '() (list "d" "d" "d" "d") 4) => "c"              ;my-history is empty
+;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c" "d" "d") 4) >= "c"   ;other-history has one "c" in recent <=N plays
+;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c") 4) >= "c"           ;test for history < N
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
