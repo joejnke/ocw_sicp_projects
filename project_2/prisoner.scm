@@ -151,13 +151,13 @@
       "c"
       "d"))
 
-(define (EGALITARIAN  my-history other-history)
-  (define (count-instances-of test hist)
-    (cond ((empty-history? hist) 0)
-	  ((string=? (most-recent-play hist) test)
-	   (+ (count-instances-of test (rest-of-plays hist)) 1))
-	  (else (count-instances-of test (rest-of-plays hist)))))
+(define (count-instances-of test hist)
+  (cond ((empty-history? hist) 0)
+  ((string=? (most-recent-play hist) test)
+    (+ (count-instances-of test (rest-of-plays hist)) 1))
+  (else (count-instances-of test (rest-of-plays hist)))))
 
+(define (EGALITARIAN  my-history other-history)
   (let ((ds (count-instances-of "d" other-history))
 	      (cs (count-instances-of "c" other-history)))
     (if (> ds cs) "d" "c")))
@@ -250,7 +250,35 @@
 ;@ (length my-history) > (length strats-list)
 ;(make-higher-order-spastic (list "c" "c" "d" "d" "c" "d") (list "c" "d" "d" "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= SPASTIC
 
+;; return a strategy with probability of coperating increasead by a given 
+;; factor while at the same time decreasing that of defecting
+;(define gentle (strat gentleness-factor)
+;  (lambda (my-history other-history)
+;    (define apply-gentleness 
+;      (let ((result (strat my-history other-history)))
+;            (cond ((string=? result "d")
+;              (let ((test (random 1.0)))
+;                (if (< test gentleness-factor)
+;                      "c"
+;                      result)))
+;              (else result)))
+;    (cond ((= gentleness-factor 0) strat)
+;          ((= gentleness-factor 1) PATSY)
+;          (else (apply-gentleness strat)))))
 
+(define (gentle strat gentleness-factor)
+  (lambda (my-history other-history)
+    (let ((result (strat my-history other-history))
+          (rand (random 1.0)))
+         (if (and (string=? "d" result) (< rand gentleness-factor))
+              "c"
+              result))))
+;; test
+;(define gentle-nasty (gentle nasty 0.5))
+;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) ;almost half of the plays are "c"
+
+;(define gentle-nasty (gentle nasty 0.1))
+;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) ;rarely returns "c". almost 1 out of 10
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
