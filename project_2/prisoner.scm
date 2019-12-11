@@ -76,11 +76,20 @@
         (else (extract-entry game (cdr *game-association-list*))))))
 
 ;; test
-;(extract-entry (make-play "c" "c") *game-association-list*) => (("c" "c") (3 3)) ;valid play
-;(extract-entry (make-play "c" "d") *game-association-list*) => (("c" "d") (0 5)) ;valid play
-;(extract-entry (make-play "d" "c") *game-association-list*) => (("d" "c") (5 0)) ;valid play
-;(extract-entry (make-play "d" "d") *game-association-list*) => (("d" "d") (1 1)) ;valid play
-;(extract-entry (make-play "r" "d") *game-association-list*) => invalid play      ;invalid play
+;(extract-entry (make-play "c" "c") *game-association-list*) ;valid play
+;Value: (("c" "c") (3 3))
+
+;(extract-entry (make-play "c" "d") *game-association-list*) ;valid play
+;Value: (("c" "d") (0 5))
+
+;(extract-entry (make-play "d" "c") *game-association-list*) ;valid play
+;Value: (("d" "c") (5 0))
+
+;(extract-entry (make-play "d" "d") *game-association-list*) ;valid play
+;Value: (("d" "d") (1 1))
+
+;(extract-entry (make-play "r" "d") *game-association-list*) ;invalid play
+;Value: "invalid play"
 
 ;; make matrix of scores of games between every possible pair of strategies in a given strategy list
 (define strats-performance-comparison 
@@ -176,34 +185,52 @@
           (else "d"))))
 
 ;; test
-;(EYE-FOR-TWO-EYES '() (list "d" "d")) => "c"   ;my-history is empty
-;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "c")) => "c" ;other-history has one "c" in recent two plays
-;(EYE-FOR-n-EYES (list "c" "c") (list "d" "d") 2) => "d" ;other-history has no "c" in recent two plays
+;(EYE-FOR-TWO-EYES '() (list "d" "d")) ;my-history is empty
+;Value: "c"
+
+;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "c")) ;other-history has one "c" in recent two plays
+;Value: "c"
+
+;(EYE-FOR-TWO-EYES (list "c" "c") (list "d" "d")) ;other-history has no "c" in recent two plays
+;Value: "d"
 
 ;; EYE-FOR-EYE but now looking recent n moves of the other player where n>=1
-(define EYE-FOR-N-EYES 
-  (lambda (my-history other-history n)
+(define (EYE-FOR-N-EYES  n)
+  (lambda (my-history other-history)
     (cond ((<= n 1) (EYE-FOR-EYE my-history other-history))
           ;if other-history has number of items less than n, call the apropriate EYE-FOR-N-EYES procedure.
-          ((< (length other-history) n) (EYE-FOR-N-EYES my-history other-history (length other-history)))
+          ((< (length other-history) n) ((EYE-FOR-N-EYES (length other-history)) my-history other-history))
 
           ((or (string=? (EYE-FOR-EYE my-history other-history) "c")
-               (string=? (EYE-FOR-N-EYES my-history (rest-of-plays other-history) (- n 1)) "c")) "c")
+               (string=? ((EYE-FOR-N-EYES (- n 1)) my-history (rest-of-plays other-history)) "c")) "c")
           (else "d"))))
 
 ;; test
-;(EYE-FOR-N-EYES '() (list "d" "d") 2) => "c"   ;my-history is empty
-;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c") 2) => "c" ;other-history has one "c" in recent two plays
-;(EYE-FOR-N-EYES (list "c" "c") (list "d" "d") 2) => "d" ;other-history has no "c" in recent two plays
-;(EYE-FOR-N-EYES '() (list "d" "d" "d" "d") 4) => "c"              ;my-history is empty
-;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c" "d" "d") 4) >= "c"   ;other-history has one "c" in recent <=N plays
-;(EYE-FOR-N-EYES (list "c" "c") (list "d" "c") 4) >= "c"           ;test for history < N
+;(define eye-for-2-eyes (EYE-FOR-N-EYES 2))
+;(eye-for-2-eyes '() (list "d" "d")) ;my-history is empty
+;Value: "c"
+
+;(eye-for-2-eyes (list "c" "c") (list "d" "c")) ;other-history has one "c" in recent two plays
+;Value: "c"
+
+;(eye-for-2-eyes (list "c" "c") (list "d" "d")) ;other-history has no "c" in recent two plays
+;Value: "d"
+
+;(define eye-for-4-eyes (EYE-FOR-N-EYES 4))
+;(eye-for-4-eyes '() (list "d" "d" "d" "d")) ;my-history is empty
+;Value: "c"
+
+;(eye-for-4-eyes (list "c" "c") (list "d" "c" "d" "d")) ;other-history has one "c" in recent <=N plays
+;Value: "c"
+
+;(eye-for-4-eyes (list "c" "c") (list "d" "c")) ;test for history < N
+;Value: "c"
 
 ;; plays strat0 for the first freq0 rounds in the
 ;; iterated game, then switches to strat1 for the next freq1 rounds, and so on.
 ;; round = (length my-history)
-(define make-rotating-strategy
-  (lambda (my-history other-history strat0 strat1 freq0 freq1)
+(define (make-rotating-strategy strat0 strat1 freq0 freq1)
+  (lambda (my-history other-history)
     (cond ((= freq0 0) (strat1 my-history other-history))
           ((= freq1 0) (strat0 my-history other-history))
           ((= 0 (length my-history)) (strat0 my-history other-history))
@@ -215,57 +242,56 @@
                           (strat1 my-history other-history)))))))
 
 ;; test
-;(make-rotating-strategy '() (list "c" "d") nasty patsy 3 2) => "d" ;0 initial history
-
 ;@ freq0 = 0
-;(make-rotating-strategy '() (list "c" "d" "d") nasty patsy 0 2) => "c"
+;(define strat-02rotate (make-rotating-strategy nasty patsy 0 2))
+;(strat-02rotate '() (list "c" "d" "d"))
+;Value: "c"
 
 ;@ freq1 = 0
-;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 0) => "d"
+;(define strat-12rotate (make-rotating-strategy nasty patsy 1 2))
+;(strat-12rotate (list "d" "c" "d" "d") (list "c" "d" "d"))
+;Value: "d"
+
+;(define strat-32rotate (make-rotating-strategy nasty patsy 3 2))
+;(strat-32rotate '() (list "c" "d")) ;0 initial history
+;Value: "d"
 
 ;@ (length my-history)=freq0
-;(make-rotating-strategy (list "d" "c" "d") (list "c" "d" "d") nasty patsy 3 2) => "c"
+;(strat-32rotate (list "d" "c" "d") (list "c" "d" "d"))
+;Value: "c"
 
-;@ (length my-history) >freq0 and (length my-history) <= (freq0 + freq1)
-;(make-rotating-strategy (list "d" "c" "d" "d") (list "c" "d" "d") nasty patsy 3 2) => "c" 
+;@ (length my-history) > freq0 and (length my-history) <= (freq0 + freq1)
+;(strat-32rotate (list "d" "c" "d" "d") (list "c" "d" "d"))
+;Value: "c"
 
 ;@ (length my-history) = (freq0 + freq1)
-;(make-rotating-strategy (list "d" "c" "d" "d" "c") (list "c" "d" "d") nasty patsy 3 2) => "c" 
+;(strat-32rotate (list "d" "c" "d" "d" "c") (list "c" "d" "d"))
+;Value: "c"
 
 ;;returns a new strategy that loops through a list of strategies passed as input, using the next
 ;;one in the list for each play, and then starting again at the beginning of the list when it has
 ;;used all the strategies
-(define make-higher-order-spastic
-  (lambda (my-history other-history strats-list)
+(define (make-higher-order-spastic strats-list)
+  (lambda (my-history other-history)
     (let ((index (remainder (length my-history) (length strats-list))))
          (list-ref strats-list index))))
 
 ;; test
+;(define hi-order-spastic (make-higher-order-spastic (list NASTY PATSY SPASTIC EGALITARIAN EYE-FOR-EYE)))
 ;@ (length my-history) = 0
-;(make-higher-order-spastic '() (list "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= NASTY
+;(hi-order-spastic '() (list "c" "d" "d"))
+;Value: NASTY
 
 ;@ (length my-history) = (length strats-list)
-;(make-higher-order-spastic (list "c" "c" "d" "c") (list "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= NASTY
+;(hi-order-spastic (list "c" "c" "d" "c") (list "c" "d" "d"))
+;Value: EYE-FOR-EYE
 
 ;@ (length my-history) > (length strats-list)
-;(make-higher-order-spastic (list "c" "c" "d" "d" "c" "d") (list "c" "d" "d" "c" "d" "d") (list NASTY PATSY SPASTIC EYE-FOR-EYE)) >= SPASTIC
+;(hi-order-spastic (list "c" "c" "d" "d" "c" "d") (list "c" "d" "d" "c" "d" "d"))
+;Value: PATSY
 
 ;; return a strategy with probability of coperating increasead by a given 
 ;; factor while at the same time decreasing that of defecting
-;(define gentle (strat gentleness-factor)
-;  (lambda (my-history other-history)
-;    (define apply-gentleness 
-;      (let ((result (strat my-history other-history)))
-;            (cond ((string=? result "d")
-;              (let ((test (random 1.0)))
-;                (if (< test gentleness-factor)
-;                      "c"
-;                      result)))
-;              (else result)))
-;    (cond ((= gentleness-factor 0) strat)
-;          ((= gentleness-factor 1) PATSY)
-;          (else (apply-gentleness strat)))))
-
 (define (gentle strat gentleness-factor)
   (lambda (my-history other-history)
     (let ((result (strat my-history other-history))
@@ -275,10 +301,12 @@
               result))))
 ;; test
 ;(define gentle-nasty (gentle nasty 0.5))
-;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) ;almost half of the plays are "c"
+;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) 
+;Value: almost half of the plays are "c"
 
 ;(define gentle-nasty (gentle nasty 0.1))
 ;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) ;rarely returns "c". almost 1 out of 10
+;Value: rarely returns "c"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
