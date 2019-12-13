@@ -450,3 +450,69 @@
         (list (list "d" "d" "c") (list 3 3 0))
         (list (list "d" "d" "d") (list 1 1 1))))
 
+;; strategies for three player game
+(define (NASTY-3 my-history other-history1 other-history2)
+  "d")
+
+(define (PATSY-3 my-history other-history1 other-history2)
+  "c")
+
+(define (SPASTIC-3 my-history other-history1 other-history2)
+  (if (= (random 2) 0)
+      "c"
+      "d"))
+;;test
+;(nasty-3 (list "c" "c" "c") (list "d" "c" "d") (list "d" "d" "c"))
+;Value: "d"
+;(patsy-3 (list "c" "c" "c") (list "d" "c" "d") (list "d" "d" "c"))
+;Value: "c"
+;(spastic-3 (list "c" "c" "c") (list "d" "c" "d") (list "d" "d" "c"))
+;Value: either "c" or "d" randomly
+
+(define (THOUGH-EYE-FOR-EYE my-history other-history1 other-history2)
+  (if (empty-history? my-history)
+      "c"
+      (let ((p1 (most-recent-play other-history1))
+            (p2 (most-recent-play other-history2)))
+           (if (or (string=? "d" p1) (string=? "d" p2))
+               "d"
+               "c"))))
+
+(define (SOFT-EYE-FOR-EYE my-history other-history1 other-history2)
+  (if (empty-history? my-history)
+      "c"
+      (let ((p1 (most-recent-play other-history1))
+            (p2 (most-recent-play other-history2)))
+           (if (or (string=? "c" p1) (string=? "c" p2))
+               "c"
+               "d"))))
+;;test
+;(THOUGH-EYE-FOR-EYE '() (list "c") (list "d"))
+;Value: "c"
+
+;(THOUGH-EYE-FOR-EYE (list "c") (list "c") (list "d"))
+;Value: "d"
+
+;(THOUGH-EYE-FOR-EYE (list "c") (list "d") (list "c"))
+;Value: "d"
+
+;(THOUGH-EYE-FOR-EYE (list "c") (list "d") (list "d"))
+;Value: "d"
+
+;(THOUGH-EYE-FOR-EYE (list "c") (list "c") (list "c"))
+;Value: "c"
+
+;(SOFT-EYE-FOR-EYE '() (list "c") (list "d"))
+;Value: "c"
+
+;(SOFT-EYE-FOR-EYE (list "c") (list "c") (list "d"))
+;Value: "c"
+
+;(SOFT-EYE-FOR-EYE (list "c") (list "d") (list "c"))
+;Value: "c"
+
+;(SOFT-EYE-FOR-EYE (list "c") (list "d") (list "d"))
+;Value: "d"
+
+;(SOFT-EYE-FOR-EYE (list "c") (list "c") (list "c"))
+;Value: "c"
