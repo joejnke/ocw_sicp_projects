@@ -469,7 +469,7 @@
 ;(spastic-3 (list "c" "c" "c") (list "d" "c" "d") (list "d" "d" "c"))
 ;Value: either "c" or "d" randomly
 
-(define (THOUGH-EYE-FOR-EYE my-history other-history1 other-history2)
+(define (TOUGH-EYE-FOR-EYE my-history other-history1 other-history2)
   (if (empty-history? my-history)
       "c"
       (let ((p1 (most-recent-play other-history1))
@@ -487,19 +487,19 @@
                "c"
                "d"))))
 ;;test
-;(THOUGH-EYE-FOR-EYE '() (list "c") (list "d"))
+;(TOUGH-EYE-FOR-EYE '() (list "c") (list "d"))
 ;Value: "c"
 
-;(THOUGH-EYE-FOR-EYE (list "c") (list "c") (list "d"))
+;(TOUGH-EYE-FOR-EYE (list "c") (list "c") (list "d"))
 ;Value: "d"
 
-;(THOUGH-EYE-FOR-EYE (list "c") (list "d") (list "c"))
+;(TOUGH-EYE-FOR-EYE (list "c") (list "d") (list "c"))
 ;Value: "d"
 
-;(THOUGH-EYE-FOR-EYE (list "c") (list "d") (list "d"))
+;(TOUGH-EYE-FOR-EYE (list "c") (list "d") (list "d"))
 ;Value: "d"
 
-;(THOUGH-EYE-FOR-EYE (list "c") (list "c") (list "c"))
+;(TOUGH-EYE-FOR-EYE (list "c") (list "c") (list "c"))
 ;Value: "c"
 
 ;(SOFT-EYE-FOR-EYE '() (list "c") (list "d"))
@@ -516,3 +516,40 @@
 
 ;(SOFT-EYE-FOR-EYE (list "c") (list "c") (list "c"))
 ;Value: "c"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  input: two two-player strategies and a “combining” procedure.
+;;  return: a three-player strategy that plays
+;;          one of the two-player strategies against one of the
+;;          opponents, and the other two-player strategy against
+;;          the other opponent, then calls the “combining” procedure
+;;          on the two two-player results
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-combined-strategies two-p-strat1 two-p-strat2 combiner)
+  (lambda (my-history other-history1 other-history2)
+    (let ((result1 (two-p-strat1 my-history other-history1))
+          (result2 (two-p-strat2 my-history other-history2)))
+         (combiner result1 result2))))
+;;test
+(define tough-efe (make-combined-strategies Eye-for-Eye 
+                                            Eye-for-Eye
+                                            (lambda (r1 r2) 
+                                               (if (or (string=? r1 "d")
+                                                       (string=? r2 "d"))
+                                                    "d"
+                                                    "c"))))
+;(tough-efe '() (list "c") (list "d"))
+;Value: "c"
+
+;(tough-efe (list "c") (list "c") (list "d"))
+;Value: "d"
+
+;(tough-efe (list "c") (list "d") (list "c"))
+;Value: "d"
+
+;(tough-efe (list "c") (list "d") (list "d"))
+;Value: "d"
+
+;(tough-efe (list "c") (list "c") (list "c"))
+;Value: "c"                                                    
