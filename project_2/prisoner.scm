@@ -46,9 +46,9 @@
 	  (else (let ((game (make-play (most-recent-play history0)
 				       (most-recent-play history1))))
 		  (get-scores-helper (rest-of-plays history0)
-				     (rest-of-plays history1)
-				     (+ (get-player-points 0 game) score0)
-				     (+ (get-player-points 1 game) score1))))))
+				                 (rest-of-plays history1)
+				                 (+ (get-player-points 0 game) score0)
+				                 (+ (get-player-points 1 game) score1))))))
   (get-scores-helper history0 history1 0 0))
 
 (define (get-player-points num game)
@@ -300,13 +300,12 @@
               "c"
               result))))
 ;; test
-;(define gentle-nasty (gentle nasty 0.5))
-;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) 
-;Value: almost half of the plays are "c"
-
-;(define gentle-nasty (gentle nasty 0.1))
-;(gentle-nasty (list "c" "d" "d") (list "c" "d" "d")) ;rarely returns "c". almost 1 out of 10
+;(define slightly-gentle-Nasty (gentle NASTY 0.1))
+;(slightly-gentle-Nasty (list "c" "d" "d") (list "c" "d" "d")) 
 ;Value: rarely returns "c"
+
+;(define slightly-gentle-Eye-for-Eye (gentle EYE-FOR-EYE 0.1))
+;(slightly-gentle-Eye-for-Eye (list "c" "d" "d") (list "c" "d" "d"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -350,4 +349,104 @@
 ;                   (get-probability-of-c (make-history-summary hist0 
 ;                                                               hist1
 ;                                                               hist2)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;  The three-play-loop procedure takes as its  arguments three prisoner's
+;;  dilemma strategies, and plays an iterated game of approximately
+;;  one hundred rounds.  A strategy is a procedure that takes
+;;  three arguments: a history of the player's previous plays and 
+;;  a history of the other two player's previous plays.  The procedure
+;;  returns either a "c" for cooperate or a "d" for defect.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (three-play-loop strat0 strat1 strat2)
+  (define (three-play-loop-iter strat0 strat1 strat2 count history0 history1 history2 limit)
+    (cond ((= count limit) (three-print-out-results history0 history1 history2 limit))
+      (else (let ((result0 (strat0 history0 history1 history2))
+                  (result1 (strat1 history1 history0 history2))
+                  (result2 (strat2 history2 history0 history1)))
+                 
+                 (three-play-loop-iter strat0 strat1 strat2 (+ count 1)
+                     (extend-history result0 history0)
+                     (extend-history result1 history1)
+                     (extend-history result2 history2)
+                     limit)))))
+
+  (three-play-loop-iter strat0 strat1 strat2 0 the-empty-history the-empty-history the-empty-history
+		  (+ 90 (random 21))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  The following procedures are used to compute and print
+;;  out the players' scores at the end of an iterated three
+;;  player game
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (three-print-out-results history0 history1 history2 number-of-games)
+  (let ((scores (three-get-scores history0 history1 history2)))
+       (newline)
+       (display "Player 1 Score:  ")
+       (display (* 1.0 (/ (car scores) number-of-games)))
+       (newline)
+       (display "Player 2 Score:  ")
+       (display (* 1.0 (/ (cadr scores) number-of-games)))
+       (newline)
+       (display "Player 3 Score:  ")
+       (display (* 1.0 (/ (caddr scores) number-of-games)))
+       (newline)))
+
+;;test
+;(three-print-out-results (list "c" "c")
+;                         (list "c" "d") 
+;                         (list "d" "d")
+;                         2)
+;Value: Player 1 Score:  1.
+;       Player 2 Score:  2.5
+;       Player 3 Score:  4.
+
+(define (three-get-scores history0 history1 history2)
+  (define (three-get-scores-helper history0 history1 history2 score0 score1 score2)
+    (cond ((empty-history? history0) (list score0 score1 score2))
+          (else (let ((game (make-play (most-recent-play history0)
+                                       (most-recent-play history1)
+                                       (most-recent-play history2))))
+                     (three-get-scores-helper (rest-of-plays history0)
+                                              (rest-of-plays history1)
+                                              (rest-of-plays history2)
+                                              (+ (three-get-player-points 0 game) score0)
+                                              (+ (three-get-player-points 1 game) score1)
+                                              (+ (three-get-player-points 2 game) score2))))))
+  (three-get-scores-helper history0 history1 history2 0 0 0))
+;;test
+;(three-get-scores '()
+;                  (list "c" "d") 
+;                  (list "d" "d"))
+;Value: (0 0 0)
+
+;(three-get-scores (list "c" "c")
+;                  (list "c" "d") 
+;                  (list "d" "d"))
+;Value: (2 5 8)
+
+(define (three-get-player-points num game)
+  (list-ref (three-get-point-list game) num))
+
+(define (three-get-point-list game)
+  (cadr (extract-entry game *three-game-association-list*)))
+
+(define *three-game-association-list*
+  ;; format is that first sublist identifies the players' choices 
+  ;; with "c" for cooperate and "d" for defect; and that second sublist 
+  ;; specifies payout for each player
+  (list (list (list "c" "c" "c") (list 4 4 4))
+        (list (list "c" "c" "d") (list 2 2 5))
+        (list (list "c" "d" "c") (list 2 5 2))
+        (list (list "d" "c" "c") (list 5 2 2))
+        (list (list "c" "d" "d") (list 0 3 3))
+        (list (list "d" "c" "d") (list 3 0 3))
+        (list (list "d" "d" "c") (list 3 3 0))
+        (list (list "d" "d" "d") (list 1 1 1))))
 
