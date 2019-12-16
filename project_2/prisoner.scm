@@ -660,13 +660,6 @@
 ;(get-probability-of-c new-summary)
 ;Value: (0.5 1 ()) 
 
-;; test if two lists are equal
-(define (test-entry index trial)
-  (cond ((null? index) (null? trial))
-        ((null? trial) #f)
-        ((= (car index) (car trial)) (test-entry (cdr index) (cdr trial)))
-        (else #f)))
-
 ;; decipher for PATSY strategy
 (define (is-he-a-fool? hist0 hist1 hist2)
   (equal? (list 1 1 1) (get-probability-of-c (history-summary hist0 hist1 hist2))))
@@ -683,7 +676,7 @@
 
 ;; decipher for a strategy more close to PATSY
 (define (could-he-be-a-fool? hist0 hist1 hist2)
-(test-entry (list 1 1 1) (map (lambda (elt)
+(equal? (list 1 1 1) (map (lambda (elt)
                                 (cond ((null? elt) 1)
                                       ((= elt 1) 1)
                                       (else 0)))
@@ -703,7 +696,7 @@
 
 ;; decipher for SOFT-EYE-FOR-EYE strategy
 (define (is-soft-efe? hist0 hist1 hist2)
-  (test-entry (list 1 1 0) (get-probability-of-c (history-summary hist0
+  (equal? (list 1 1 0) (get-probability-of-c (history-summary hist0
                                                                        hist1
                                                                        hist2))))
 ;; test 
