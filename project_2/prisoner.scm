@@ -623,10 +623,39 @@
                  (else (case-dd (cdr hist0)
                                 (cdr hist1)
                                 (cdr hist2)))))))
+;; test
+;(define summary (history-summary
+;(list "c" "c" "d" "d" "c" "d" "c" "c") ;hist-0
+;(list "c" "c" "c" "d" "d" "c" "d" "c") ;hist-1
+;(list "c" "c" "d" "d" "d" "c" "c" "c") ;hist-2
+;))
 
+;; calculate the probability of value, which is "c" or "d", 
+;; in a given case which includes "cooperate-cooperate", "cooperate-defect" and "defect-defect"
+(define (get-probability-of value case)
+  (cond ((string=? value "c") (if (equal? (list 0 0 0) case)
+                                  '()
+                                  (/ (cooperate case)
+                                     (total case))))
+        ((string=? value "d") (if (equal? (list 0 0 0) case)
+                                  '()
+                                  (/ (defect case)
+                                     (total case))))))
+;; calculate the probability of "c" in a given game history summary
+;; on each case which includes "cooperate-cooperate", "cooperate-defect" and "defect-defect"
+(define (get-probability-of-c summary)
+  (list (get-probability-of "c" (cooperate-cooperate summary))
+        (get-probability-of "c" (cooperate-defect summary))
+        (get-probability-of "c" (defect-defect summary))))       
 
-(define summary (history-summary
-(list "c" "c" "d" "d" "c" "d" "c" "c") ;hist-0
-(list "c" "c" "c" "d" "d" "c" "d" "c") ;hist-1
-(list "c" "c" "d" "d" "d" "c" "c" "c") ;hist-2
-))
+;(define summary (history-summary (list "c" "c" "c" "c")
+;                                 (list "d" "d" "d" "c")
+;                                 (list "d" "d" "c" "c")))     
+;(get-probability-of-c summary)
+;Value: (1 1 1)
+
+;(define new-summary (history-summary (list "c" "c" "c" "d" "c")
+;                                     (list "d" "c" "d" "d" "c")
+;                                     (list "d" "c" "c" "c" "c")))
+;(get-probability-of-c new-summary)
+;Value: (0.5 1 ()) 
