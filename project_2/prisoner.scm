@@ -665,10 +665,11 @@
   (equal? (list 1 1 1) (get-probability-of-c (history-summary hist0 hist1 hist2))))
 
 ;; test 
-(is-he-a-fool? (list "c" "c" "c" "c" "c")
-               (list "d" "c" "d" "d" "c")
-               (list "d" "c" "c" "c" "c"))
+;(is-he-a-fool? (list "c" "c" "c" "c" "c")
+;               (list "d" "c" "d" "d" "d")
+;               (list "d" "c" "c" "c" "d"))
 ;Value: #t
+
 ;(is-he-a-fool? (list "c" "d" "c" "c" "c")
 ;               (list "d" "c" "d" "d" "c")
 ;               (list "d" "c" "c" "c" "c"))
@@ -687,11 +688,11 @@
 ;; test
 ;(could-he-be-a-fool? (list "c" "c" "c" "c" "c")
 ;                     (list "d" "c" "d" "d" "c")
-;                     (list "d" "c" "c" "c" "c")
+;                     (list "d" "c" "c" "c" "c"))
 ;Value: #t
 ;(could-he-be-a-fool? (list "c" "c" "c" "d" "c")
 ;                     (list "d" "c" "d" "d" "c")
-;                     (list "d" "c" "c" "c" "c")
+;                     (list "d" "c" "c" "c" "c"))
 ;Value: #f
 
 ;; decipher for SOFT-EYE-FOR-EYE strategy
@@ -732,6 +733,7 @@
 ;                     (list "d" "c" "d" "d" "c" "d" "c" "c" "c" "c")
 ;                     (list "d" "c" "c" "c" "c" "c" "c" "c" "c" "c"))
 ;Value: "c"
+
 ;(dont-tolerate-fools (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c")
 ;                     (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c")
 ;                     (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c"))
