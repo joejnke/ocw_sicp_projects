@@ -552,4 +552,81 @@
 ;Value: "d"
 
 ;(tough-efe (list "c") (list "c") (list "c"))
-;Value: "c"                                                    
+;Value: "c"
+
+;;selectors
+(define (cooperate case) (car case))
+(define (defect case) (cadr case))
+(define (total case) (caddr case))
+(define (cooperate-cooperate summary) (car summary))
+(define (cooperate-defect summary) (cadr summary))
+(define (defect-defect summary) (caddr summary))
+
+;;constructors
+(define (history-summary hist0 hist1 hist2)
+  (list (case-cc hist0 hist1 hist2)
+        (case-cd hist0 hist1 hist2)
+        (case-dd hist0 hist1 hist2)))
+
+(define (case-cc hist0 hist1 hist2)
+  (if (or (empty-history? (cdr hist0)) (empty-history? (cdr hist1)) (empty-history? (cdr hist2))) 
+      (list 0 0 0)
+      (let ((isC0 (string=? "c" (car hist0)))
+            (isC1 (string=? "c" (cadr hist1)))
+            (isC2 (string=? "c" (cadr hist2))))
+           (cond ((and isC0 isC1 isC2) (map + (list 1 0 1)
+                                              (case-cc (cdr hist0)
+                                                       (cdr hist1)
+                                                       (cdr hist2))))
+                 ((and (not isC0) isC1 isC2) (map + (list 0 1 1)
+                                              (case-cc (cdr hist0)
+                                                       (cdr hist1)
+                                                       (cdr hist2))))
+                 (else (case-cc (cdr hist0)
+                                (cdr hist1)
+                                (cdr hist2)))))))
+
+(define (case-cd hist0 hist1 hist2)
+  (if (or (empty-history? (cdr hist0)) (empty-history? (cdr hist1)) (empty-history? (cdr hist2))) 
+      (list 0 0 0)
+      (let ((isC0 (string=? "c" (car hist0)))
+            (isC1 (string=? "c" (cadr hist1)))
+            (isC2 (string=? "c" (cadr hist2))))
+           (cond ((or (and isC1 (not isC2))
+                      (and (not isC1) isC2)) (if isC0
+                                                 (map + (list 1 0 1)
+                                                        (case-cd (cdr hist0)
+                                                                 (cdr hist1)
+                                                                 (cdr hist2)))
+                                                  (map + (list 0 1 1)
+                                                          (case-cd (cdr hist0)
+                                                                   (cdr hist1)
+                                                                   (cdr hist2)))))
+                 (else (case-cd (cdr hist0)
+                                (cdr hist1)
+                                (cdr hist2)))))))
+
+(define (case-dd hist0 hist1 hist2)
+  (if (or (empty-history? (cdr hist0)) (empty-history? (cdr hist1)) (empty-history? (cdr hist2))) 
+      (list 0 0 0)
+      (let ((isD0 (string=? "d" (car  hist0)))
+            (isD1 (string=? "d" (cadr hist1)))
+            (isD2 (string=? "d" (cadr hist2))))
+           (cond ((and (not isD0) isD1 isD2) (map + (list 1 0 1)
+                                                    (case-dd (cdr hist0)
+                                                             (cdr hist1)
+                                                             (cdr hist2))))
+                 ((and isD0 isD1 isD2) (map + (list 0 1 1)
+                                              (case-dd (cdr hist0)
+                                                       (cdr hist1)
+                                                       (cdr hist2))))
+                 (else (case-dd (cdr hist0)
+                                (cdr hist1)
+                                (cdr hist2)))))))
+
+
+(define summary (history-summary
+(list "c" "c" "d" "d" "c" "d" "c" "c") ;hist-0
+(list "c" "c" "c" "d" "d" "c" "d" "c") ;hist-1
+(list "c" "c" "d" "d" "d" "c" "c" "c") ;hist-2
+))
