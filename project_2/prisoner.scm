@@ -659,3 +659,87 @@
 ;                                     (list "d" "c" "c" "c" "c")))
 ;(get-probability-of-c new-summary)
 ;Value: (0.5 1 ()) 
+
+;; test if two lists are equal
+(define (test-entry index trial)
+  (cond ((null? index) (null? trial))
+        ((null? trial) #f)
+        ((= (car index) (car trial)) (test-entry (cdr index) (cdr trial)))
+        (else #f)))
+
+;; decipher for PATSY strategy
+(define (is-he-a-fool? hist0 hist1 hist2)
+  (equal? (list 1 1 1) (get-probability-of-c (history-summary hist0 hist1 hist2))))
+
+;; test 
+(is-he-a-fool? (list "c" "c" "c" "c" "c")
+               (list "d" "c" "d" "d" "c")
+               (list "d" "c" "c" "c" "c"))
+;Value: #t
+;(is-he-a-fool? (list "c" "d" "c" "c" "c")
+;               (list "d" "c" "d" "d" "c")
+;               (list "d" "c" "c" "c" "c"))
+;Value: #f
+
+;; decipher for a strategy more close to PATSY
+(define (could-he-be-a-fool? hist0 hist1 hist2)
+(test-entry (list 1 1 1) (map (lambda (elt)
+                                (cond ((null? elt) 1)
+                                      ((= elt 1) 1)
+                                      (else 0)))
+                              (get-probability-of-c (history-summary hist0
+                                                                          hist1
+                                                                          hist2)))))
+
+;; test
+;(could-he-be-a-fool? (list "c" "c" "c" "c" "c")
+;                     (list "d" "c" "d" "d" "c")
+;                     (list "d" "c" "c" "c" "c")
+;Value: #t
+;(could-he-be-a-fool? (list "c" "c" "c" "d" "c")
+;                     (list "d" "c" "d" "d" "c")
+;                     (list "d" "c" "c" "c" "c")
+;Value: #f
+
+;; decipher for SOFT-EYE-FOR-EYE strategy
+(define (is-soft-efe? hist0 hist1 hist2)
+  (test-entry (list 1 1 0) (get-probability-of-c (history-summary hist0
+                                                                       hist1
+                                                                       hist2))))
+;; test 
+;(is-soft-efe? (list "c" "c" "c" "d" "c")
+;              (list "d" "c" "d" "d" "d")
+;              (list "d" "c" "c" "c" "d"))
+;Value: #t
+;(is-soft-efe? (list "c" "d" "c" "c" "c")
+;              (list "d" "c" "d" "d" "c")
+;              (list "d" "c" "c" "c" "c"))
+;Value: #f
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;     strategy that cooperate for the first ten rounds; on subsequent rounds
+;;     it checks (on each round) to see whether the other players might both be 
+;;     playing Patsy. If it finds that both other players seem to be
+;;     cooperating uniformly, it defects; otherwise, it cooperates.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (dont-tolerate-fools my-history other-history1 other-history2)
+  (if (< (length my-history) 10) 
+      "c")
+      (let ((p1IsFool (could-he-be-a-fool? other-history1 other-history2 my-history))
+            (p2IsFool (could-he-be-a-fool? other-history2 other-history1 my-history)))
+           (if (and p1IsFool p2IsFool)
+                "d"
+                "c")))
+
+;; test
+;(dont-tolerate-fools (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c")
+;                     (list "d" "c" "d" "d" "c" "d" "c" "c" "c" "c")
+;                     (list "d" "c" "c" "c" "c" "c" "c" "c" "c" "c"))
+;Value: "c"
+;(dont-tolerate-fools (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c")
+;                     (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c")
+;                     (list "c" "c" "c" "c" "c" "c" "c" "c" "c" "c"))
+;Value: "d"
