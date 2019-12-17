@@ -264,8 +264,8 @@
 
 (define integrate
   (lambda (x0 y0 u0 v0 dt g m beta)
-    (if (<= y0 0)  ;if the ball hit the ground
-        x0        ;return the value x at which point the ball hit the ground
+    (if (<= (+ y0 (* v0 dt)) 0)  ;if the ball hit the ground
+        (+ x0 (* u0 dt))         ;return the value x at which point the ball hit the ground
 
         ;;compute the new value of x y u and v and then call integrate with this values
         (let ((x (+ x0 (* u0 dt)))
@@ -401,5 +401,34 @@
 ;(angle-to-throw 45 1 0 mass beta gravity) => -90 ;throwing down to ground to 0 lateral distance from a given height
 
 ;; Problem 8
+(define (bounce-travel-distance elevation velocity-mag angle num-bounce)
+  (if (= 0 num-bounce)
+      (travel-distance elevation velocity-mag angle)
+      (+ (travel-distance elevation velocity-mag angle) 
+         (bounce-travel-distance 0 (/ velocity-mag 2.0) angle (- num-bounce 1)))))
+;; test
+;(bounce-travel-distance 1 45 45 0) 
+;Value: 92.2306 ;need to be same as (travel-distance 1 45 45)
+
+;(bounce-travel-distance 1 45 45 1)
+;Value: 130.6107 ;need to be greater than (bounce-travel-distance 1 45 45 0) 
+                 ;by (travel-distance-simple 0 (/ 45 2.0) 45)
+;(bounce-travel-distance 1 35 45 10) 
+;Value: 106.2171
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; calculate the maximum achievable distance, distance where the ball's speed will be 0,
+;; and number of bounces to reach there.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (max-travel-distance elevation velocity-mag angle)
+  (define (find-num-bounce init-num-bounce)
+    (if (= (bounce-travel-distance elevation velocity-mag angle init-num-bounce)
+            (bounce-travel-distance elevation velocity-mag angle (+ 1 init-num-bounce)))
+          (list init-num-bounce (bounce-travel-distance elevation velocity-mag angle init-num-bounce))
+          (find-num-bounce (+ 1 init-num-bounce))))
+  (find-num-bounce 0))
+;; test
+;(max-travel-distance 1 45 45 10)  
+;Value: 44          
 
 ;; Problem 9
