@@ -428,7 +428,7 @@
           (find-num-bounce (+ 1 init-num-bounce))))
   (find-num-bounce 0))
 ;; test
-;(max-travel-distance 1 45 45 10)  
+;(max-travel-distance 1 45 45)  
 ;Value: 44          
 
 ;; Problem 9
