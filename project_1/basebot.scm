@@ -432,3 +432,23 @@
 ;Value: 44          
 
 ;; Problem 9
+(define (integrated-bounce-travel-distance elevation velocity-mag angle num-bounce)
+  (define get-integrated-values
+      (let ((x0 0)
+            (y0 elevation)
+            (u0 (* velocity-mag (cos (degree2radian angle))))
+            (v0 (* velocity-mag (sin (degree2radian angle)))))
+          (integrate x0 y0 u0 v0 alpha-increment gravity mass beta)))
+  (let ((integrated-values get-integrated-values))
+    (if (= 0 num-bounce)
+        (car integrated-values)
+        (+ (car integrated-values)
+           (integrated-bounce-travel-distance 0 (caddr integrated-values) angle (- num-bounce 1))))))
+;; test
+;(integrated-bounce-travel-distance 1 45 45 0) 
+;Value: 92.2306 ;need to be same as (travel-distance 1 45 45)
+
+;(integrated-bounce-travel-distance 1 45 45 1)
+;Value: 133.8541 ;need to be greater than (bounce-travel-distance 1 45 45 1)
+;(integrated-bounce-travel-distance 1 35 45 10) 
+;Value: 219.5246 ;need to be greater than (bounce-travel-distance 1 35 45 10)        
