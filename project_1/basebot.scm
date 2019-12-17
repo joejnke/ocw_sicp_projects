@@ -264,24 +264,24 @@
 
 (define integrate
   (lambda (x0 y0 u0 v0 dt g m beta)
-    (if (<= (+ y0 (* v0 dt)) 0)  ;if the ball hit the ground
-        (+ x0 (* u0 dt))         ;return the value x at which point the ball hit the ground
-
-        ;;compute the new value of x y u and v and then call integrate with this values
-        (let ((x (+ x0 (* u0 dt)))
-              (y (+ y0 (* v0 dt)))
-              (u (+ u0 (* (- (/ 1 m))
-                          beta
-                          u0
-                          (sqrt (+ (square u0) (square v0)))
-                          dt)))
-              (v (+ v0 (* dt
-                          (- (+ g
-                                (* (/ 1 m)
-                                   beta
-                                   v0
-                                   (sqrt (+ (square u0) (square v0))))))))))
-              (integrate x y u v dt g m beta)))))
+    ;;compute the new value of x y u and v and then call integrate with this values
+    (let ((x (+ x0 (* u0 dt)))
+          (y (+ y0 (* v0 dt)))
+          (u (+ u0 (* (- (/ 1 m))
+                      beta
+                      u0
+                      (sqrt (+ (square u0) (square v0)))
+                      dt)))
+          (v (+ v0 (* dt
+                      (- (+ g
+                            (* (/ 1 m)
+                                beta
+                                v0
+                                (sqrt (+ (square u0) (square v0))))))))))
+          (if (<= y 0)       ;if the ball hit the ground
+              (list x y (sqrt (+ (square u) (square v)))) ;return list of values of x, y and velocity magnitude
+              (integrate x y u v dt g m beta))))) ;keep computing until it hits the ground
+              
 
 (define travel-distance
   (lambda (elevation velocity-mag angle)
@@ -289,7 +289,7 @@
           (y0 elevation)
           (u0 (* velocity-mag (cos (degree2radian angle))))
           (v0 (* velocity-mag (sin (degree2radian angle)))))
-         (integrate x0 y0 u0 v0 alpha-increment gravity mass beta))))
+         (car (integrate x0 y0 u0 v0 alpha-increment gravity mass beta)))))
 
 
 ;; RUN SOME TEST CASES
