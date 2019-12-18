@@ -214,26 +214,24 @@
           visited-nodes))  
 
   (define (filter-visited candidate-nodes)
-;    (map-append (lambda (node)
-;              (if (visited? node)
-;                  '()
-;                  node)) candidate-nodes)
     (cond ((null? candidate-nodes) '())
           ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
                                                           (filter-visited (cdr candidate-nodes))))
           (else (filter-visited (cdr candidate-nodes)))))
 
   (define (search-inner still-to-do)
+    ;(write-line still-to-do)
     (if (null? still-to-do)
-	#f
-	(let ((current (car still-to-do)))
-	  (if *search-debug*
-	      (write-line (list 'now-at current)))
-    (append! visited-nodes (list current))
-	  (if (goal? current)
-	      #t
-	      (search-inner
-	       (merge (filter-visited (successors graph current)) (cdr still-to-do)))))))
+	      #f
+        (let ((current (car still-to-do)))
+            (if *search-debug*
+                (write-line (list 'now-at current)))
+            (append! visited-nodes (list current))
+            ;(write-line visited-nodes)
+            (if (goal? current)
+                #t
+                (search-inner
+                  (filter-visited (merge (successors graph current) (cdr still-to-do))))))))
   (search-inner (list initial-state)))
 
 (define (DFS start goal? graph)
@@ -247,6 +245,26 @@
  (DFS 'a
       (lambda (node) (eq? node 'l))
       test-cycle)
+
+; (DFS 'http://sicp.csail.mit.edu/
+;      (lambda (node) #f)
+;      the-web)
+
+(define (BFS start goal? graph)
+  (search-with-cycles start
+	  goal?
+	  find-node-children
+	  (lambda (new old) (append old new))
+	  graph))
+
+;; test
+;(BFS 'a
+;     (lambda (node) (eq? node 'l))
+;     test-cycle)
+
+; (BFS 'http://sicp.csail.mit.edu/
+;      (lambda (node) #f)
+;      the-web)
 
 ;;;------------------------------------------------------------
 ;;; Index Abstraction
