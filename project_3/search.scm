@@ -208,12 +208,12 @@
 (define (search-with-cycles initial-state goal? successors merge graph)
   (define visited-nodes (list initial-state))
   
-  (define (visited? node)
+  (define (visited? node)       ; Node -> boolean|Node
     (find (lambda (item) 
             (equal? node item))
           visited-nodes))  
 
-  (define (filter-visited candidate-nodes)
+  (define (filter-visited candidate-nodes)        ; list<Node> -> list<Node>|null
     (cond ((null? candidate-nodes) '())
           ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
                                                           (filter-visited (cdr candidate-nodes))))
