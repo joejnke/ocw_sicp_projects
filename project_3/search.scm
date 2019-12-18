@@ -183,13 +183,70 @@
 	  (lambda (new old) (append old new))
 	  graph))
 
+;; test
+;(BFS-simple 'a
+;             (lambda (node) (eq? node 'l))
+;             test-graph)
 
- (BFS-simple 'a
-             (lambda (node) (eq? node 'l))
-             test-graph)
-
+;;-----------why BFS-simple works?-----------
+;;changing the append order brings the 
+;;least recent tree level to the end of the
+;;list to search in.
 ;; you will need to write a similar search procedure that handles cycles
 
+;;;------------------------------------------------------------
+;;; Searching a network
+;;;
+;;; We define below a standard search procedure that walks
+;;; over a graph in an effort to find a desired node.
+;;; This version does handle cycles in the graph
+
+;; search: Node, (Node->Boolean), (Graph, Node -> List<Node>)
+;;         (List<Node>, List<Node> -> List<Node>), Graph
+;;           --> Boolean 
+
+(define (search-with-cycles initial-state goal? successors merge graph)
+  (define visited-nodes (list initial-state))
+  
+  (define (visited? node)
+    (find (lambda (item) 
+            (equal? node item))
+          visited-nodes))  
+
+  (define (filter-visited candidate-nodes)
+;    (map-append (lambda (node)
+;              (if (visited? node)
+;                  '()
+;                  node)) candidate-nodes)
+    (cond ((null? candidate-nodes) '())
+          ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
+                                                          (filter-visited (cdr candidate-nodes))))
+          (else (filter-visited (cdr candidate-nodes)))))
+
+  (define (search-inner still-to-do)
+    (if (null? still-to-do)
+	#f
+	(let ((current (car still-to-do)))
+	  (if *search-debug*
+	      (write-line (list 'now-at current)))
+    (append! visited-nodes (list current))
+	  (if (goal? current)
+	      #t
+	      (search-inner
+	       (merge (filter-visited (successors graph current)) (cdr still-to-do)))))))
+  (search-inner (list initial-state)))
+
+(define (DFS start goal? graph)
+  (search-with-cycles start
+	  goal?
+	  find-node-children
+	  (lambda (new old) (append new old))
+	  graph))
+
+
+ (DFS 'a
+      (lambda (node) (eq? node 'l))
+      test-cycle)
 
 ;;;------------------------------------------------------------
 ;;; Index Abstraction
