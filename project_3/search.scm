@@ -175,7 +175,18 @@
 ; (DFS-simple 'a
 ;             (lambda (node) (eq? node 'l))
 ;             test-graph)
-  
+
+(define (BFS-simple start goal? graph)
+  (search start
+	  goal?
+	  find-node-children
+	  (lambda (new old) (append old new))
+	  graph))
+
+
+ (BFS-simple 'a
+             (lambda (node) (eq? node 'l))
+             test-graph)
 
 ;; you will need to write a similar search procedure that handles cycles
 
