@@ -171,7 +171,7 @@
 	  (lambda (new old) (append new old))
 	  graph))
 
-
+;; test
 ; (DFS-simple 'a
 ;             (lambda (node) (eq? node 'l))
 ;             test-graph)
@@ -208,10 +208,12 @@
 (define (search-with-cycles initial-state goal? successors merge graph)
   (define visited-nodes (list initial-state))
   
-  (define (visited? node)       ; Node -> boolean|Node
-    (find (lambda (item) 
-            (equal? node item))
-          visited-nodes))  
+  (define (visited? node)       ; Node -> boolean
+    (if (find (lambda (item) 
+                (equal? node item))
+              visited-nodes)
+        #t
+        #f))
 
   (define (filter-visited candidate-nodes)        ; list<Node> -> list<Node>|null
     (cond ((null? candidate-nodes) '())
@@ -242,9 +244,9 @@
 	  graph))
 
 
- (DFS 'a
-      (lambda (node) (eq? node 'l))
-      test-cycle)
+; (DFS 'a
+;      (lambda (node) (eq? node 'l))
+;      test-cycle)
 
 ; (DFS 'http://sicp.csail.mit.edu/
 ;      (lambda (node) #f)
@@ -278,11 +280,37 @@
 ;; Index Implementation
 ;;
 ;;   An Index will be a tagged data object that holds a 
-;; list of Index-Entries.  Each Index-Entry associates
-;; a key with a list of values for that key, i.e.
+;;   list of Index-Entries.  Each Index-Entry associates
+;;   a key with a list of values for that key, i.e.
 ;;   Index = Pair<Index-Tag, list<Index-Entry>>
 ;;   Index-Entry = list<Key, list<Val>>
 ;; 
+
+(define (make-index-entry key)  ; Key -> Index-entry
+  (list key))
+
+(define (val-found-in-entry? index-entry val)   ; Index-Entry, Val -> boolean
+  (if (find (lambda (item) 
+              (equal? val item))
+            (cadr index-entry))
+      #t
+      #f)
+  )
+
+(define (insert-val-to-entry! index-entry val)  ; Index-Entry, Val -> Index-Entry
+  (if (null? (cdr index-entry))
+      (append! index-entry (list (list val)))
+      (let ((val-exists (val-found-in-entry? index-entry val)))
+           (if (not val-exists)
+               (append! (cadr index-entry) 
+                        (list val)))))
+  index-entry)
+;; test
+;(define test-entry (make-index-entry 'ethiopia))
+;(insert-val-to-entry! test-entry 'addis)
+;(insert-val-to-entry! test-entry 'axum)
+;Value: (ethiopia (addis axum))
+
 
 (define (make-index)            ; void -> Index
   (list 'index))
@@ -313,17 +341,24 @@
         (cadr index-entry)
         '())))
 
+(define (insert-entry-to-index! index index-entry)   ; Index, Index-Entry -> Index
+    (append! index
+             (list index-entry))
+  index)  
+
 ;; TO BE IMPLEMENTED
-;;(define (add-to-index! index key value) ; Index,Key,Val -> Index
-;;  (let ((index-entry (find-entry-in-index index key)))
-;;    (if (null? index-entry)
-;;      ;; no entry -- create and insert a new one...
-;;	;... TO BE IMPLEMENTED
-;;
-;;      ;; entry exists -- insert value if not already there...
-;;	;... TO BE IMPLEMENTED
-;;	))
-;;  index)
+(define (add-to-index! index key value) ; Index,Key,Val -> Index
+  (let ((index-entry (find-entry-in-index index key)))
+      (if (null? index-entry)
+        ;; no entry -- create and insert a new one...
+        (insert-entry-to-index! index
+                              (insert-val-to-entry! (make-index-entry key)
+                                                    value))
+
+        ;; entry exists -- insert value if not already there...
+        (insert-val-to-entry! index-entry
+                              value))
+  index))
 
 ;; Testing
 ;; (define test-index (make-index))
