@@ -463,7 +463,68 @@
 ;; (find-in-index the-web-index '*magic*)
 ;; ;Value: #f
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Crawler that build index of the words found 
+;; in all urls found in the given web
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (make-web-index web start-url)
+  (define the-web-index (make-index))  ; creat index for the whole web
+  
+  ;; procedure that add contents of a URL into the-web-index
+  (define add-url-content-to-web-index
+    (lambda (url)
+      (add-document-to-index! the-web-index web url)))
+  
+  ;; search procedure that accept procedure to be applied on every node traversed
+  (define (search initial-state goal? successors merge graph proc-to-apply)
+    (define visited-nodes (list initial-state))
+    
+    (define (visited? node)       ; Node -> boolean
+      (if (find (lambda (item) 
+                  (equal? node item))
+                visited-nodes)
+          #t
+          #f))
 
+    (define (filter-visited candidate-nodes)        ; list<Node> -> list<Node>|null
+      (cond ((null? candidate-nodes) '())
+            ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
+                                                            (filter-visited (cdr candidate-nodes))))
+            (else (filter-visited (cdr candidate-nodes)))))
+
+    (define (search-inner still-to-do)
+      ;(write-line still-to-do)
+      (if (null? still-to-do)
+          #f
+          (let ((current (car still-to-do)))
+              ;(if *search-debug*
+              ;    (write-line (list 'now-at current)))
+              (append! visited-nodes (list current))
+              ;(write-line visited-nodes)
+              (proc-to-apply current)  ;; add contents of current URL to the-web-index
+              (if (goal? current)
+                  #t
+                  (search-inner
+                    (filter-visited (merge (successors graph current) (cdr still-to-do))))))))
+    (search-inner (list initial-state)))
+
+  ;; go over all the urls using BFS strategy
+  (define bfs 
+    (search start-url
+            (lambda (node) #f)
+	          find-node-children
+	          (lambda (new old) (append old new))
+	          web
+            add-url-content-to-web-index))
+
+  ;; define procedure that return values of a given index-entry from the-web-index
+  (define find-key-word
+    (lambda (key)
+      (find-in-index the-web-index key)))
+  find-key-word)
+  
 ;;------------------------------------------------------------
 ;; utility for timing procedure calls.
 ;; returns the time in seconds
