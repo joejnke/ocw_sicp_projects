@@ -339,7 +339,7 @@
   (let ((index-entry (find-entry-in-index index key)))
     (if (not (null? index-entry))
         (cadr index-entry)
-        '())))
+        #f)))
 
 (define (insert-entry-to-index! index index-entry)   ; Index, Index-Entry -> Index
     (append! index
@@ -442,9 +442,11 @@
 
 ;; TO BE IMPLEMENTED
 ;; add-document-to-index!: Index, Web, URL
-;; (define (add-document-to-index! index web url)
-;; ...
-;; )
+(define (add-document-to-index! index web url)
+  (let ((words-list (find-URL-text web url))
+        (add-word-index-entry (lambda (word)
+                                (add-to-index! index word url))))
+       (for-each add-word-index-entry words-list)))
 
 
 ;; Example use
@@ -455,10 +457,10 @@
 ;;                         the-web 
 ;;                         'http://sicp.csail.mit.edu/)
 ;; 
-;; (find-in-index 'help)
+;; (find-in-index the-web-index 'help)
 ;; ;Value: (http://sicp.csail.mit.edu/)
 ;; 
-;; (find-in-index '*magic*)
+;; (find-in-index the-web-index '*magic*)
 ;; ;Value: #f
 
 
