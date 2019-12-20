@@ -614,76 +614,95 @@
       (newline)
       (display "time expended: ")
       (display (- (runtime) start))
+      (newline)
       val)))
 
 ;;-----------------------------------------
 ;; Comparison Web Index Vs Dynamic Search
 ;;-----------------------------------------      
-(define time-test
-  (lambda ()
-    (let  ;; create test webs and their corresponding find-docs procedures
-          ((t-web1 (generate-random-web 75))
-          (t-web2 (generate-random-web 100))
-          (t-web3 (generate-random-web 150)))
-
-          ;; time test for each test-web
-          (write-line (list 'search-any 'on 't-web1 'for '"help"))
-          (timed search-any t-web1 '*start* 'help)
-
-          (write-line (list 'search-any 'on 't-web2 'for '"help"))
-          (timed search-any t-web2 '*start* 'help)
-
-          (write-line (list 'search-any 'on 't-web3 'for '"help"))
-          (timed search-any t-web3 '*start* 'help)
-
-          ;search word not found in web
-          (write-line (list 'search-any 'on 't-web1 'for '"Kirubel"))
-          (timed search-any t-web1 '*start* 'Kirubel)
-
-          (write-line (list 'search-any 'on 't-web2 'for '"Kirubel"))
-          (timed search-any t-web2 '*start* 'Kirubel)
-
-          (write-line (list 'search-any 'on 't-web3 'for '"Kirubel"))
-          (timed search-any t-web3 '*start* 'Kirubel)
-
-          (write-line (list 'search-all 'on 't-web1 'for '"help"))
-          (timed search-all t-web1 '*start* 'help)
-
-          (write-line (list 'search-all 'on 't-web2 'for '"help"))
-          (timed search-all t-web2 '*start* 'help)
-
-          (write-line (list 'search-all 'on 't-web3 'for '"help"))
-          (timed search-all t-web3 '*start* 'help)
-
-          ;make-web-index
-          (write-line (list 'build-web-index 'for 't-web1))
-          (timed find-docs t-web1 '*start*)
-          (define find-docs-tw1 (find-docs t-web1 '*start*))  ;build Web-index for t-web1
-
-          (write-line (list 'build-web-index 'for 't-web2))
-          (timed find-docs t-web2 '*start*)
-          (define find-docs-tw2 (find-docs t-web2 '*start*))  ;build Web-index for t-web2
-
-          (write-line (list 'build-web-index 'for 't-web3))
-          (timed find-docs t-web3 '*start*)
-          (define find-docs-tw3 (find-docs t-web3 '*start*))  ;build Web-index for t-web3
-
-          ;find documents containing the word 'help
-          (write-line (list 'find-docs-tw1 'for 'the 'word '"help"))
-          (timed find-docs-tw1 'help)
-
-          (write-line (list 'find-docs-tw2 'for 'the 'word '"help"))
-          (timed find-docs-tw2 'help)
-
-          (write-line (list 'find-docs-tw3 'for 'the 'word '"help"))
-          (timed find-docs-tw3 'help)
-
-          ;find documents containing the word 'Kirubel, which is not found
-          (write-line (list 'find-docs-tw1 'for 'the 'word '"Kirubel"))
-          (timed find-docs-tw1 'Kirubel)
-
-          (write-line (list 'find-docs-tw2 'for 'the 'word '"Kirubel"))
-          (timed find-docs-tw2 'Kirubel)
-
-          (write-line (list 'find-docs-tw3 'for 'the 'word '"Kirubel"))
-          (timed find-docs-tw3 'Kirubel))))
+;(define time-test
+;  (lambda ()
+;    (let  ;; create test webs and their corresponding find-docs procedures
+;          ((t-web1 (generate-random-web 75))
+;          (t-web2 (generate-random-web 100))
+;          (t-web3 (generate-random-web 150)))
+;
+;          ;; time test for each test-web
+;          (newline)
+;          (display (list 'search-any 'on 't-web1 'for '"help"))
+;          (timed search-any t-web1 '*start* 'help)
+;
+;          (newline)
+;          (display (list 'search-any 'on 't-web2 'for '"help"))
+;          (timed search-any t-web2 '*start* 'help)
+;
+;          (newline)
+;          (display (list 'search-any 'on 't-web3 'for '"help"))
+;          (timed search-any t-web3 '*start* 'help)
+;
+;          ;search word not found in web
+;          (newline)
+;          (display (list 'search-any 'on 't-web1 'for '"Kirubel"))
+;          (timed search-any t-web1 '*start* 'Kirubel)
+;
+;          (newline)
+;          (display (list 'search-any 'on 't-web2 'for '"Kirubel"))
+;          (timed search-any t-web2 '*start* 'Kirubel)
+;
+;          (newline)
+;          (display (list 'search-any 'on 't-web3 'for '"Kirubel"))
+;          (timed search-any t-web3 '*start* 'Kirubel)
+;
+;          (newline)
+;          (display (list 'search-all 'on 't-web1 'for '"help"))
+;          (timed search-all t-web1 '*start* 'help)
+;
+;          (newline)
+;          (display (list 'search-all 'on 't-web2 'for '"help"))
+;          (timed search-all t-web2 '*start* 'help)
+;
+;          (newline)
+;          (display (list 'search-all 'on 't-web3 'for '"help"))
+;          (timed search-all t-web3 '*start* 'help)
+;
+;          ;make-web-index
+;          (newline)
+;          (display (list 'build-web-index 'for 't-web1))
+;          (timed find-docs t-web1 '*start*)
+;          (define find-docs-tw1 (find-docs t-web1 '*start*))  ;build Web-index for t-web1
+;
+;          (newline)
+;          (display (list 'build-web-index 'for 't-web2))
+;          (timed find-docs t-web2 '*start*)
+;          (define find-docs-tw2 (find-docs t-web2 '*start*))  ;build Web-index for t-web2
+;
+;          (newline)
+;          (display (list 'build-web-index 'for 't-web3))
+;          (timed find-docs t-web3 '*start*)
+;          (define find-docs-tw3 (find-docs t-web3 '*start*))  ;build Web-index for t-web3
+;
+;          ;find documents containing the word 'help
+;          (newline)
+;          (display (list 'find-docs-tw1 'for 'the 'word '"help"))
+;          (timed find-docs-tw1 'help)
+;
+;          (newline)
+;          (display (list 'find-docs-tw2 'for 'the 'word '"help"))
+;          (timed find-docs-tw2 'help)
+;
+;          (newline)
+;          (display (list 'find-docs-tw3 'for 'the 'word '"help"))
+;          (timed find-docs-tw3 'help)
+;
+;          ;find documents containing the word 'Kirubel, which is not found
+;          (newline)
+;          (display (list 'find-docs-tw1 'for 'the 'word '"Kirubel"))
+;          (timed find-docs-tw1 'Kirubel)
+;
+;          (newline)
+;          (display (list 'find-docs-tw2 'for 'the 'word '"Kirubel"))
+;          (timed find-docs-tw2 'Kirubel)
+;
+;          (newline)
+;          (display (list 'find-docs-tw3 'for 'the 'word '"Kirubel"))
+;          (timed find-docs-tw3 'Kirubel))))
