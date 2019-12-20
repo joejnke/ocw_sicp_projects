@@ -466,7 +466,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Crawler that build index of the words found 
-;; in all urls found in the given web
+;; in all urls found in the given web in full-text mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (make-web-index web start-url)
@@ -524,7 +524,85 @@
     (lambda (key)
       (find-in-index the-web-index key)))
   find-key-word)
-  
+
+;; test
+; (define find-documents (make-web-index the-web 'http://sicp.csail.mit.edu/))
+; (find-documents 'collaborative)
+;Value 14: (http://sicp.csail.mit.edu/ http://sicp.csail.mit.edu/psets)
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Crawler that searches
+;; a word in the web dynamically
+;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (dynamic-search web start-node word *search-all*)
+  (define nodes-containing-word (list '()))
+  (define visited-nodes (list start-node))
+  (define merge 
+    (lambda (new old)
+     (append old new)))
+  (define (word-found-in-node? node)    ; Node -> boolean
+    (if (find (lambda (item)
+                (equal? item word))
+              (find-node-contents web node))
+        #t
+        #f))
+
+  (define (visited? node)       ; Node -> boolean
+    (if (find (lambda (item) 
+                (equal? node item))
+              visited-nodes)
+        #t
+        #f))
+
+  (define (filter-visited candidate-nodes)        ; list<Node> -> list<Node>|null
+    (cond ((null? candidate-nodes) '())
+          ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
+                                                          (filter-visited (cdr candidate-nodes))))
+          (else (filter-visited (cdr candidate-nodes)))))
+
+  (define (search-inner still-to-do)
+    ;(write-line still-to-do)
+    (if (null? still-to-do)
+        (let ((result (cdr nodes-containing-word)))
+             (if (null? result)
+                #f
+                result))
+
+        (let ((current (car still-to-do)))
+            ;(if *search-debug*
+            ;    (write-line (list 'now-at current)))
+            (append! visited-nodes (list current))
+            ;(write-line visited-nodes)
+            ;(write-line nodes-containing-word)
+            (if *search-all*
+              (let ()
+                  (if (word-found-in-node? current)
+                      (append! nodes-containing-word (list current)))
+                  (search-inner
+                    (filter-visited (merge (find-node-children web current) (cdr still-to-do)))))
+              
+              (if (word-found-in-node? current)
+                current
+                (search-inner
+                  (filter-visited (merge (find-node-children web current) (cdr still-to-do)))))))))  
+  (search-inner (list start-node)))
+
+(define (search-any web start-node word)    ; Graph, Node, Key -> Node|#f
+  (dynamic-search web start-node word #f))
+;; test
+;(search-any the-web 'http://sicp.csail.mit.edu/ 'collaborative)
+;Value: http://sicp.csail.mit.edu/
+
+(define (search-all web start-node word)    ; Graph, Node, Key -> list<Node>|#f
+  (dynamic-search web start-node word #t))
+
+;; test
+;(search-all the-web 'http://sicp.csail.mit.edu/ 'collaborative)
+;Value: (http://sicp.csail.mit.edu/ http://sicp.csail.mit.edu/psets)
+
 ;;------------------------------------------------------------
 ;; utility for timing procedure calls.
 ;; returns the time in seconds
