@@ -706,3 +706,17 @@
 ;          (newline)
 ;          (display (list 'find-docs-tw3 'for 'the 'word '"Kirubel"))
 ;          (timed find-docs-tw3 'Kirubel))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Create an optimized index by converting the 
+;; list of index entries into a vector sorted
+;; using thier key
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (optimized-index ind)
+  (define opt-ind (make-vector 2 'index))
+  (vector-set! opt-ind 1 (sort! (list->vector (cdr ind))
+                                (lambda (ind-entry1 ind-entry2)
+                                  (symbol<? (car ind-entry1)
+                                            (car ind-entry2)))))
+  opt-ind)
