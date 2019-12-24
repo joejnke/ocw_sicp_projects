@@ -721,21 +721,167 @@
                                             (car ind-entry2)))))
   opt-ind)
 
-(define (find-in-opt-index opt-index key)
-  (cadr (vector-binary-search (vector-ref opt-index 1)
-                             symbol<?  car  key)))
+;;-------------------------
+;; search the optimized index and return 
+;; the index-entry with matching entry key
+;;-------------------------
+(define (find-entry-in-opt-index opt-index key)   ; optimized-index, key -> Index-entry
+  (vector-binary-search (vector-ref opt-index 1)
+                              symbol<?  car  key))
 
 ;; test
 ; (define the-web-index (make-index))
 ; (add-document-to-index! the-web-index
 ;                         the-web
 ;                         'http://sicp.csail.mit.edu/)
+; (add-document-to-index! the-web-index
+;                         the-web
+;                         'http://sicp.csail.mit.edu/psets)
 
 ; (define opt-ind (optimized-index the-web-index))
-; (equal? (find-in-index the-web-index 'help)
-;         (find-in-opt-index opt-ind 'help))
+; (equal? (find-entry-in-index the-web-index 'help)
+;         (find-entry-in-opt-index opt-ind 'help))
 ;Value: #t
 
-; (equal? (find-in-index the-web-index 'how)
-;         (find-in-opt-index opt-ind 'how))
+; (equal? (find-entry-in-index the-web-index 'how)
+;         (find-entry-in-opt-index opt-ind 'how))
 ;Value: #t
+
+;;-------------------------
+;; search the optimized index and return 
+;; the list of values for an index-entry
+;; with matching entry key using 
+;; binary-search algorithm
+;;-------------------------
+(define (find-entry-in-optimized-index optind key)   ; optimized-index, key -> list<Val>
+  (define (index-binary-search vector-entry key)
+    (if (= (vector-length vector-entry) 1)
+        (let ((entry (vector-ref vector-entry 0)))
+             (if (equal? key (car entry))
+                 entry
+                 #f)))
+    (let ((mid-entry (vector-ref vector-entry
+                                 (ceiling (/ (vector-length vector-entry) 2))))
+          (mid-index (ceiling (/ (vector-length vector-entry) 2))))
+         (cond ((symbol<? key (car mid-entry)) 
+                (index-binary-search (subvector vector-entry
+                                               0
+                                               mid-index)
+                                     key))
+               ((symbol>? key (car mid-entry)) 
+                (index-binary-search (subvector vector-entry
+                                                (+ mid-index 1)
+                                                (vector-length vector-entry))
+                                     key))
+               (else mid-entry))))
+    (let ((entry (index-binary-search (vector-ref optind 1) key)))
+         (if entry
+             (cadr entry)
+             #f)))
+
+;; test
+; (equal? (find-in-index the-web-index 'help)
+;         (find-entry-in-optimized-index opt-ind 'help))
+;Value: #t
+
+;; run-time test
+;-----------------------------------------------
+;build and retun a web index for the entire web
+(define (build-web-index web start-url)
+  (define the-web-index (make-index))  ; creat index for the whole web
+  
+  ;; procedure that add contents of a URL into the-web-index
+  (define add-url-content-to-web-index
+    (lambda (url)
+      (add-document-to-index! the-web-index web url)))
+  
+  ;; search procedure that accept procedure to be applied on every node traversed
+  (define (search initial-state goal? successors merge graph proc-to-apply)
+    (define visited-nodes (list initial-state))
+    
+    (define (visited? node)       ; Node -> boolean
+      (if (find (lambda (item) 
+                  (equal? node item))
+                visited-nodes)
+          #t
+          #f))
+
+    (define (filter-visited candidate-nodes)        ; list<Node> -> list<Node>|null
+      (cond ((null? candidate-nodes) '())
+            ((not (visited? (car candidate-nodes))) (append (list (car candidate-nodes))
+                                                            (filter-visited (cdr candidate-nodes))))
+            (else (filter-visited (cdr candidate-nodes)))))
+
+    (define (search-inner still-to-do)
+      ;(write-line still-to-do)
+      (if (null? still-to-do)
+          #f
+          (let ((current (car still-to-do)))
+              ;(if *search-debug*
+              ;    (write-line (list 'now-at current)))
+              (append! visited-nodes (list current))
+              ;(write-line visited-nodes)
+              (proc-to-apply current)  ;; add contents of current URL to the-web-index
+              (if (goal? current)
+                  #t
+                  (search-inner
+                    (filter-visited (merge (successors graph current) (cdr still-to-do))))))))
+    (search-inner (list initial-state)))
+
+  ;; go over all the urls using BFS strategy
+  (define bfs 
+    (search start-url
+            (lambda (node) #f)
+	          find-node-children
+	          (lambda (new old) (append old new))
+	          web
+            add-url-content-to-web-index))
+  
+  ;; define procedure that return values of a given index-entry from the-web-index
+  the-web-index)
+
+;------------------------------------------------------------
+; apply a search procedure for a key on a given web index where
+; the key will be searched num-iter times
+(define (search-run-time proc key num-iter)
+  (define apply-proc
+    (lambda () 
+      (map (lambda (item)
+            (proc item)) 
+          (make-list num-iter key))
+      'done))
+  (timed apply-proc))
+
+;; begin run time test
+;(define web-index (build-web-index the-web 'http://sicp.csail.mit.edu/)) ;index of an entire web
+;(define opt-web-index (optimized-index web-index))
+;
+;(display (list 'run 'time 'of 'find-in-index))
+;(search-run-time (lambda (key)
+;                    (find-in-index web-index key))
+;                 'help 
+;                 10000)
+;                
+;(newline)
+;(display (list 'run 'time 'of 'find-entry-in-optimized-index))
+;(search-run-time (lambda (key)
+;                    (find-entry-in-optimized-index opt-web-index key))
+;                 'help 
+;                 10000)
+;
+;(newline)
+;(display (list 'run 'time 'of 'search-all))
+;(search-run-time (lambda (key)
+;                    (search-all the-web 'http://sicp.csail.mit.edu/ key))
+;                 'help 
+;                 10000)
+
+;;-----------run time result description-------------
+;; find-entry-in-optimized-index is faster than search all.
+;; this is due to the fact that it uses binary search and unlike the
+;; search all procedure which uses sequential search. But when compared to 
+;; find-in-index procedure , it's slower and the reason for this is that 
+;; find-in-index uses the assv pre-built searching procedure which is 
+;; implemented in an optimal way and find-entry-in-optimized-index uses a
+;; custom implementation of binary search where i used several built in procedures
+;; and recursive calls to localy defined procedure.
