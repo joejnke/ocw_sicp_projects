@@ -525,7 +525,7 @@
       (find-in-index the-web-index key)))
   find-key-word)
 
- (define (find-docs web start-node) (make-web-index web start-node))
+(define (find-docs web start-node) (make-web-index web start-node))
 ;; test
 ; (define find-documents (find-docs the-web 'http://sicp.csail.mit.edu/)) ;build the-web-index
 ; (find-documents 'collaborative)  ;search in the-web-index
@@ -720,3 +720,22 @@
                                   (symbol<? (car ind-entry1)
                                             (car ind-entry2)))))
   opt-ind)
+
+(define (find-in-opt-index opt-index key)
+  (cadr (vector-binary-search (vector-ref opt-index 1)
+                             symbol<?  car  key)))
+
+;; test
+; (define the-web-index (make-index))
+; (add-document-to-index! the-web-index
+;                         the-web
+;                         'http://sicp.csail.mit.edu/)
+
+; (define opt-ind (optimized-index the-web-index))
+; (equal? (find-in-index the-web-index 'help)
+;         (find-in-opt-index opt-ind 'help))
+;Value: #t
+
+; (equal? (find-in-index the-web-index 'how)
+;         (find-in-opt-index opt-ind 'how))
+;Value: #t
